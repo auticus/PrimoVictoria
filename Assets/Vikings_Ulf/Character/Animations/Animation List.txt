@@ -1,0 +1,16 @@
+Viking Ulf Animations keyframe
+
+
+Idle 0-60
+Idle other 61-181
+walk 182-222
+run 223-253
+jump  254-304
+attack1 305-375
+attack2 376-550
+attack3 551-621
+attack4 622-697
+get hit 698-738
+dead 739-799
+dead L 800-855
+dead R 856-911
