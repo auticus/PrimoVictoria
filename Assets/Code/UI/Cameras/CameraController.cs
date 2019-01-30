@@ -8,7 +8,7 @@ public class CameraController : MonoBehaviour
      * If mouse movement enabled, moving mouse to edge of screen will move the screen as well
      * Q & E will rotate the camera as will holding middle mouse button and moving the mouse
      * mouse wheel will zoom in and out
-     * TODO: manual tilt
+     * Holding mouse scrollwheel down will pan left and right or up and down, though left and right takes precedence unless you hold the left SHIFT key down
      * TODO: smart height adjustment so that the camera raises in height if it would collide with a ground object like a tower or a guy on a hill
      * TODO: the ability to bring the mouse to center on a unit
      */
@@ -26,36 +26,44 @@ public class CameraController : MonoBehaviour
     [SerializeField] [Tooltip("Enable to have the speed of camera movement speed up the closer you get to the screen edge")] private bool MouseMoveAccelerationEnabled = true;
     [SerializeField] [Tooltip("How far the camera can go in X or Y coordinates")] private Vector2 MapLimit = new Vector2(40, 50);
 
-
     private Vector2 MouseAxis
     {
         get { return new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y")); }
     }
 
+    private float _currentCameraRotation = 0.0f;
+    private float _currentCameraTilt = 0.0f;
+
     #region Unity Methods
-    // Start is called before the first frame update
     void Start()
     {
         transform.eulerAngles = new Vector3(StartingCameraTilt, 0, 0);
-
+        _currentCameraTilt = StartingCameraTilt;
         var camera = FindObjectOfType<Camera>();
         camera.fieldOfView = FieldOfView;
     }
 
-    
     void LateUpdate()
     {
         HandleAxisMovement();
-        HandleRotation();
+
+        //if you let the user adjust both the tilt and the rotation at the same time, the camera can get really jacked up on its side potentially
+        //only let them tilt if they did not rotate
+        if (HandleRotation() == false)
+            HandleTilt();
     }
     #endregion Unity Methods
 
+    /// <summary>
+    /// Handles the movement of the camera along the x and z axis
+    /// </summary>
     private void HandleAxisMovement()
     {
         var xAxis = Input.GetAxis("Horizontal");
         var zAxis = Input.GetAxis("Vertical");
         var pos = transform.position;
 
+        //the mouse axis will override the keyboard
         if (MouseMovementEnabled)
             HandleMouseMovement(ref xAxis, ref zAxis);
 
@@ -74,6 +82,11 @@ public class CameraController : MonoBehaviour
         transform.position = pos;
     }
 
+    /// <summary>
+    /// Handles all movement related to the mouse
+    /// </summary>
+    /// <param name="xAxis"></param>
+    /// <param name="zAxis"></param>
     private void HandleMouseMovement(ref float xAxis, ref float zAxis)
     {
         if (xAxis > float.Epsilon && zAxis > float.Epsilon)
@@ -123,20 +136,49 @@ public class CameraController : MonoBehaviour
         }
     }
 
-    private void HandleRotation()
+    /// <summary>
+    /// Handles the rotation, will return TRUE if a rotation has occurred.  Will not rotate at all if the left SHIFT button is being held down (will always return FALSE)
+    /// </summary>
+    /// <returns>TRUE if a rotation has occurred</returns>
+    private bool HandleRotation()
     {
-        var rotation = Input.GetAxis("Rotation");
-        transform.Rotate(Vector3.up, rotation * Time.deltaTime * CameraRotationSpeed, Space.World);
+        if (Input.GetKey(KeyCode.LeftShift))
+            return false;
 
-        if (MouseMovementEnabled)
-            HandleMouseRotation();
+        float rotation = 0.0f;
+        if (MouseMovementEnabled && Input.GetKey(KeyCode.Mouse2))
+        {
+            rotation = -MouseAxis.x;
+        }
+        else
+        {
+            rotation = Input.GetAxis("Rotation");
+        }
+
+        _currentCameraRotation += rotation * CameraRotationSpeed * Time.deltaTime;
+        transform.rotation = Quaternion.Euler(_currentCameraTilt, _currentCameraRotation, 0);
+
+        return Mathf.Abs(rotation) > float.Epsilon;
     }
 
-    private void HandleMouseRotation()
+    /// <summary>
+    /// Handles the tilting of the camera.  
+    /// </summary>
+    private void HandleTilt()
     {
-        //holding down the scroll wheel button and moving the mouse also rotates the camera
-        //unity is a 0-based system so l. button = 0, r. button = 1, and middle = 2
-        if (Input.GetKey(KeyCode.Mouse2))
-            transform.Rotate(Vector3.up, -MouseAxis.x * Time.deltaTime * CameraRotationSpeed, Space.World);
+        float tilt = 0.0f;
+        if (MouseMovementEnabled && Input.GetKey(KeyCode.Mouse2))
+        {
+            tilt = -MouseAxis.y;
+        }
+        else
+        {
+            tilt = Input.GetAxis("Camera Tilt");
+        }
+
+        _currentCameraTilt += tilt * CameraRotationSpeed * Time.deltaTime;
+        _currentCameraTilt = Mathf.Clamp(_currentCameraTilt, MinCameraTilt, MaxCameraTilt);
+
+        transform.rotation = Quaternion.Euler(_currentCameraTilt, _currentCameraRotation, 0);
     }
 }
