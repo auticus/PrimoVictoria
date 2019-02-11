@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(Camera))]
 public class CameraController : MonoBehaviour
@@ -9,7 +10,6 @@ public class CameraController : MonoBehaviour
      * Q & E will rotate the camera as will holding middle mouse button and moving the mouse
      * mouse wheel will zoom in and out
      * Holding mouse scrollwheel down will pan left and right or up and down, though left and right takes precedence unless you hold the left SHIFT key down
-     * TODO: smart height adjustment so that the camera raises in height if it would collide with a ground object like a tower or a guy on a hill
      * TODO: the ability to bring the mouse to center on a unit
      */
     [SerializeField] private float CameraMovementSpeed = 25.0f;
@@ -24,7 +24,8 @@ public class CameraController : MonoBehaviour
     [SerializeField] [Tooltip("How many units from edge of screen will trigger mouse movement")] private float MouseMoveBorderEdgeScreen = 10.0f;
     [SerializeField] private bool MouseMovementEnabled = true;
     [SerializeField] [Tooltip("Enable to have the speed of camera movement speed up the closer you get to the screen edge")] private bool MouseMoveAccelerationEnabled = true;
-    [SerializeField] [Tooltip("How far the camera can go in X or Y coordinates")] private Vector2 MapLimit = new Vector2(40, 50);
+    [SerializeField] [Tooltip("How far the camera can go in X or Y coordinates")] private Vector2 MapLimit = new Vector2(100, 100);
+    [SerializeField] [Tooltip("The LayerMasks that represent the ground or anything else that can affect camera height")] private List<LayerMask> GroundMasks = new List<LayerMask>() { -1 };
 
     private Vector2 MouseAxis
     {
@@ -69,17 +70,73 @@ public class CameraController : MonoBehaviour
 
         var x = xAxis * CameraMovementSpeed * Time.deltaTime;
         var z = zAxis * CameraMovementSpeed * Time.deltaTime;
+        var y = CalculateHeight(pos.y);
 
         pos.x += x;
         pos.z += z;
-
-        var scroll = Input.GetAxis("Mouse ScrollWheel");
-        pos.y -= scroll * CameraZoomSpeed * Time.deltaTime;
+        pos.y -= y; //inverted because zooming in is a positive value (decrementing Y) but zooming out is negative (incrementing Y)
 
         pos.x = Mathf.Clamp(pos.x, -MapLimit.x, MapLimit.x);
         pos.z = Mathf.Clamp(pos.z, -MapLimit.y, MapLimit.y);
         pos.y = Mathf.Clamp(pos.y, MinCameraZoom, MaxCameraZoom);
+        
+        //m_Transform.position = Vector3.Lerp(m_Transform.position,
+            //new Vector3(m_Transform.position.x, targetHeight + difference, m_Transform.position.z), Time.deltaTime * heightDampening);
+
         transform.position = pos;
+    }
+
+    private float _groundDistance;
+    private float CalculateHeight(float currentY)
+    {
+        var scroll = Input.GetAxis("Mouse ScrollWheel");
+        var standardHeightCalculation = scroll * CameraZoomSpeed * Time.deltaTime;
+
+        //it could be that terrain is now raised enough where the camera is into the terrain.  We need to adjust for that and bring the camera up to avoid eating dirt
+        var distanceToGround = DistanceToGround();
+
+        if (Mathf.Abs(distanceToGround - _groundDistance) >= float.Epsilon)
+        {
+            _groundDistance = distanceToGround;
+        }
+
+        //if current ground distance is less than zoom (we climbed elevation with the camera by moving on the axis and hit a hill or something) then bring it up
+        if (_groundDistance < MinCameraZoom)
+        {
+            standardHeightCalculation = -(MinCameraZoom - _groundDistance);
+        }
+        
+        //now if the adjustment will take the ground distance below the min camera zoom, it needs adjusted
+        if (_groundDistance - standardHeightCalculation < MinCameraZoom)
+        {
+            standardHeightCalculation = 0.0f;  //we will not perform this action
+        }
+
+        return standardHeightCalculation;
+    }
+    
+    /// <summary>
+    /// Calculate the distance to the ground or highest game object in the GroundMask list from the game object this is attached to
+    /// </summary>
+    /// <returns></returns>
+    private float DistanceToGround()
+    {
+        Ray ray = new Ray(transform.position, Vector3.down);
+        RaycastHit hit;
+        var shortestMagnitude = 0.0f; //we want the shortest raycast since that represents the tallest item (the distance would be the shortest of them all from here to there)
+        foreach (var groundMask in GroundMasks)
+        {
+            if (Physics.Raycast(ray, out hit, groundMask.value))
+            {
+                var magnitude = (hit.point - transform.position).magnitude;
+                if (magnitude < shortestMagnitude || shortestMagnitude <= float.Epsilon)
+                {
+                    shortestMagnitude = magnitude;
+                }
+            }
+        }
+
+        return shortestMagnitude;
     }
 
     /// <summary>
