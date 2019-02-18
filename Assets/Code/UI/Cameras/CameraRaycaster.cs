@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using UnityEngine;
 
 [RequireComponent(typeof(Camera))]
@@ -6,18 +7,10 @@ public class CameraRaycaster : MonoBehaviour
 {
     [SerializeField] float DistanceToBackground = 100f;
     private Camera view;
+    private Layer[] _layers;
 
-    public const string POST_PROCESSING = "PostProcessing";
-    public const string FRIENDLY = "Friendly";
-    public const string ENEMY = "Enemy";
-    public const string STRUCTURES = "Structures";
-    public const string TERRAIN = "Terrain";
-    public const string UNKNOWN = "Unknown";
-
-    private string[] _layers = new string[] { POST_PROCESSING, FRIENDLY, ENEMY, STRUCTURES, TERRAIN };
-
-    private string _currentLayer;
-    private string CurrentLayer
+    private Layer _currentLayer;
+    private Layer CurrentLayer
     {
         set
         {
@@ -30,21 +23,22 @@ public class CameraRaycaster : MonoBehaviour
         }
     }
 
-    public EventHandler<string> OnLayerChanged;
+    public EventHandler<Layer> OnLayerChanged;
 
     // Start is called before the first frame update
     private void Start()
     {
         view = Camera.main;
+        _layers = Layer.GetLayers();
     }
 
     // Update is called once per frame
     private void Update()
     {
         //loop through each potential layer.  When you find the first one, set it and bounce out.  Right now we don't want to know every layer, just the top most layer that was hit.
-        foreach(var layer in _layers)
+        foreach(var layer in _layers.OrderBy(p=>p.Priority))
         {
-            var layer_mask = LayerMask.GetMask(layer);
+            var layer_mask = LayerMask.GetMask(layer.Name);
             var hit = RaycastForLayer(layer_mask);
             if (hit.HasValue)
             {

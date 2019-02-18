@@ -13,14 +13,14 @@ public class UICursor : MonoBehaviour
         Raycaster.OnLayerChanged += AdjustCursor;
     }
 
-    private void AdjustCursor (object sender, string layer)
+    private void AdjustCursor (object sender, Layer layer)
     {
         //todo: need to add the ability to know if we have a friend or enemy clicked, this should be stored in a game manager of some type
         var selectedUnit = GameManager.instance.SelectedUnit;
 
         if (selectedUnit == null)
         {
-            SetNoUnitSelectedIcon(layer);
+            SetNoUnitSelectedIcon(layer.Name);
         }
         //else if the unit is a friend then set friend
         //else if the unit is an enemy then set enemy
@@ -31,19 +31,19 @@ public class UICursor : MonoBehaviour
     {
         switch (layer)
         {
-            case CameraRaycaster.POST_PROCESSING:
+            case Layer.POST_PROCESSING:
                 Cursor.SetCursor(Unknown, new Vector2(16, 16), CursorMode.Auto);
                 break;
-            case CameraRaycaster.FRIENDLY:
+            case Layer.FRIENDLY:
                 Cursor.SetCursor(NoUnit_Friendly, new Vector2(16, 16), CursorMode.Auto);
                 break;
-            case CameraRaycaster.ENEMY:
+            case Layer.ENEMY:
                 Cursor.SetCursor(NoUnit_Enemy, new Vector2(16, 16), CursorMode.Auto);
                 break;
-            case CameraRaycaster.STRUCTURES:
+            case Layer.STRUCTURES:
                 Cursor.SetCursor(Unknown, new Vector2(16, 16), CursorMode.Auto);
                 break;
-            case CameraRaycaster.TERRAIN:
+            case Layer.TERRAIN:
                 Cursor.SetCursor(NoUnit_Default, new Vector2(16, 16), CursorMode.Auto);
                 break;
         }
