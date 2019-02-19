@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Camera))]
 public class CameraRaycaster : MonoBehaviour
@@ -14,11 +16,10 @@ public class CameraRaycaster : MonoBehaviour
     {
         set
         {
-            if (_currentLayer == value)
+            if (_currentLayer != null && _currentLayer.Name == value.Name)
                 return;
 
             _currentLayer = value;
-            Debug.Log($"Layer changed to {value}");
             OnLayerChanged?.Invoke(this, _currentLayer);
         }
     }
@@ -35,17 +36,57 @@ public class CameraRaycaster : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        //loop through each potential layer.  When you find the first one, set it and bounce out.  Right now we don't want to know every layer, just the top most layer that was hit.
-        foreach(var layer in _layers.OrderBy(p=>p.Priority))
+        //if we're over a UI object, the only thing we're sending back is the UI element
+        if (EventSystem.current.IsPointerOverGameObject())
         {
-            var layer_mask = LayerMask.GetMask(layer.Name);
-            var hit = RaycastForLayer(layer_mask);
-            if (hit.HasValue)
+            CurrentLayer = _layers.First(p => p.Name == Layer.UI);
+            return;
+        }
+
+        var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        var hits = Physics.RaycastAll(ray, DistanceToBackground);
+        var priorityHit = FindTopLayerHit(hits);
+        
+        if (!priorityHit.HasValue)
+        {
+            CurrentLayer = _layers.First(p => p.Name == Layer.DEFAULT);
+            return;
+        }
+
+        var layerHit = _layers.First(p => p.Priority == priorityHit.Value.collider.gameObject.layer);
+        CurrentLayer = layerHit;
+
+        //todo:  check for mouse click events and broadcast those as well
+        if (Input.GetMouseButton(0))
+        {
+            //todo: left button clicked
+        }
+        if (Input.GetMouseButton(1))
+        {
+            //todo: right button clicked
+        }
+        if (Input.GetMouseButton(2))
+        {
+            //todo: middle button clicked
+        }
+    }
+
+    /// <summary>
+    /// get the raycast that is associated with the top level layer in order of priority
+    /// </summary>
+    /// <param name="hits"></param>
+    /// <returns></returns>
+    private RaycastHit? FindTopLayerHit(RaycastHit[] hits)
+    {
+        foreach (var layer in _layers)
+        {
+            foreach (var hit in hits)
             {
-                CurrentLayer = layer;
-                return;
+                if (hit.collider.gameObject.layer == layer.Priority) //layer int number is the same as the layer.Priority set up
+                    return hit;
             }
         }
+        return null;
     }
 
     private RaycastHit? RaycastForLayer(int layer)

@@ -2,11 +2,11 @@
 
 public class UICursor : MonoBehaviour
 {
-    [SerializeField] Texture2D NoUnit_Default;
-    [SerializeField] Texture2D NoUnit_Friendly;
-    [SerializeField] Texture2D NoUnit_Enemy;
-    [SerializeField] Texture2D Unknown;
-    [SerializeField] CameraRaycaster Raycaster;
+    [SerializeField] Texture2D NoUnit_Default = null;
+    [SerializeField] Texture2D NoUnit_Friendly = null;
+    [SerializeField] Texture2D NoUnit_Enemy = null;
+    [SerializeField] Texture2D Unknown = null;
+    [SerializeField] CameraRaycaster Raycaster = null;
 
     void Start()
     {
@@ -32,6 +32,7 @@ public class UICursor : MonoBehaviour
         switch (layer)
         {
             case Layer.POST_PROCESSING:
+            case Layer.DEFAULT:
                 Cursor.SetCursor(Unknown, new Vector2(16, 16), CursorMode.Auto);
                 break;
             case Layer.FRIENDLY:
