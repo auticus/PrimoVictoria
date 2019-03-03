@@ -1,10 +1,13 @@
-﻿public enum UnitSizeType 
+﻿namespace PrimoVictoria.DataModels
 {
-    Unknown = 0,
-    Solo,
-    Battery,
-    Unit,
-    Regiment,
-    Company,
-    Maniple
+    public enum UnitSizeType
+    {
+        Unknown = 0,
+        Solo,
+        Battery,
+        Unit,
+        Regiment,
+        Company,
+        Maniple
+    }
 }

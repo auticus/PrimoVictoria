@@ -1,12 +1,15 @@
-﻿public enum UnitTypes
+﻿namespace PrimoVictoria.DataModels
 {
-    Unknown = 0,
-    Infantry,
-    LargeInfantry,
-    Cavalry,
-    LargeCavalry,
-    Monster,
-    Artillery,
-    Leader,
-    MonstrousLeader
+    public enum UnitTypes
+    {
+        Unknown = 0,
+        Infantry,
+        LargeInfantry,
+        Cavalry,
+        LargeCavalry,
+        Monster,
+        Artillery,
+        Leader,
+        MonstrousLeader
+    }
 }

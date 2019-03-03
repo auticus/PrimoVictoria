@@ -1,4 +1,7 @@
-﻿public enum SpecialRules
+﻿namespace PrimoVictoria.DataModels
 {
-    ShieldWall
+    public enum SpecialRules
+    {
+        ShieldWall
+    }
 }
