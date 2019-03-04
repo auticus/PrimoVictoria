@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using PrimoVictoria.Models;
+using PrimoVictoria.Controllers;
 
 namespace PrimoVictoria.UI.Cameras
 {
@@ -12,29 +13,26 @@ namespace PrimoVictoria.UI.Cameras
     public class CameraRaycaster : MonoBehaviour
     {
         [SerializeField] float DistanceToBackground = 100f;
+        [SerializeField] Vector2 CursorHotspot;
+
+        #region Cursors
+        [SerializeField] Texture2D NoUnit_Default = null;
+        [SerializeField] Texture2D NoUnit_Friendly = null;
+        [SerializeField] Texture2D NoUnit_Enemy = null;
+        [SerializeField] Texture2D Unknown = null;
+        #endregion Cursors
+
+        public EventHandler<Vector3> OnMouseOverTerrain { get;set; }
+        public EventHandler<Unit> OnMouseOverGamePiece { get; set; }
+
         private Camera view;
-        private Layer[] _layers;
-
-        private Layer _currentLayer;
-        private Layer CurrentLayer
-        {
-            set
-            {
-                if (_currentLayer != null && _currentLayer.Name == value.Name)
-                    return;
-
-                _currentLayer = value;
-                OnLayerChanged?.Invoke(this, _currentLayer);
-            }
-        }
-
-        public EventHandler<Layer> OnLayerChanged;
+        private const int TERRAIN_LAYER = 8;
+        
 
         // Start is called before the first frame update
         private void Start()
         {
             view = Camera.main;
-            _layers = Layer.GetLayers();
         }
 
         // Update is called once per frame
@@ -43,64 +41,58 @@ namespace PrimoVictoria.UI.Cameras
             //if we're over a UI object, the only thing we're sending back is the UI element
             if (EventSystem.current.IsPointerOverGameObject())
             {
-                CurrentLayer = _layers.First(p => p.Name == Layer.UI);
                 return;
             }
+            else
+            {
+                PerformRaycasts();
+            }
+        }
 
+        private void PerformRaycasts()
+        {
+            //the sequence given here illustrates the layered approach we care about
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            var hits = Physics.RaycastAll(ray, DistanceToBackground);
-            var priorityHit = FindTopLayerHit(hits);
-
-            if (!priorityHit.HasValue)
-            {
-                CurrentLayer = _layers.First(p => p.Name == Layer.DEFAULT);
+            if (RaycastForUnit(ray))
                 return;
-            }
+            if (RaycastForTerrain(ray))
+                return;
 
-            var layerHit = _layers.First(p => p.Priority == priorityHit.Value.collider.gameObject.layer);
-            CurrentLayer = layerHit;
-
-            //todo:  check for mouse click events and broadcast those as well
-            if (Input.GetMouseButton(0))
-            {
-                //todo: left button clicked
-            }
-            if (Input.GetMouseButton(1))
-            {
-                //todo: right button clicked
-            }
-            if (Input.GetMouseButton(2))
-            {
-                //todo: middle button clicked
-            }
+            Cursor.SetCursor(NoUnit_Default, CursorHotspot, CursorMode.Auto);
         }
 
-        /// <summary>
-        /// get the raycast that is associated with the top level layer in order of priority
-        /// </summary>
-        /// <param name="hits"></param>
-        /// <returns></returns>
-        private RaycastHit? FindTopLayerHit(RaycastHit[] hits)
+        private bool RaycastForUnit(Ray ray)
         {
-            foreach (var layer in _layers)
+            RaycastHit hitInfo;
+            Physics.Raycast(ray, out hitInfo, DistanceToBackground);
+            var objectHit = hitInfo.collider.gameObject;
+            var unitHit = objectHit.GetComponent<Unit>();
+            if (unitHit != null)
             {
-                foreach (var hit in hits)
-                {
-                    if (hit.collider.gameObject.layer == layer.Priority) //layer int number is the same as the layer.Priority set up
-                        return hit;
-                }
+                //todo: when implementing selected units and you want to charge, etc, this will matter and you will need to change the cursor more intelligently
+                //for right now every unit we just use the same cursor for
+                Cursor.SetCursor(NoUnit_Friendly, CursorHotspot, CursorMode.Auto);
+                OnMouseOverGamePiece?.Invoke(this, unitHit);
+                return true;
             }
-            return null;
+
+            return false;
         }
 
-        private RaycastHit? RaycastForLayer(int layer)
+        private bool RaycastForTerrain(Ray ray)
         {
-            var ray = view.ScreenPointToRay(Input.mousePosition);
-            var hasHit = Physics.Raycast(ray, out RaycastHit hit, DistanceToBackground, layer);
-            if (hasHit)
-                return hit;
+            RaycastHit hitInfo;
+            var terrainLayerMask = 1 << TERRAIN_LAYER;
+            var terrainHit = Physics.Raycast(ray, out hitInfo, DistanceToBackground, terrainLayerMask);
+            if (terrainHit)
+            {
+                //todo: when units are selected etc, this will need more intelligent, right now we just set it to the default cursor
+                Cursor.SetCursor(NoUnit_Default, CursorHotspot, CursorMode.Auto);
+                OnMouseOverTerrain?.Invoke(this, hitInfo.point);
+                return true;
+            }
 
-            return null;
+            return false;
         }
     }
 }

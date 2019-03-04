@@ -3,7 +3,7 @@
 namespace PrimoVictoria.DataModels
 {
     [CreateAssetMenu(fileName = "New Equipment", menuName = "New Equipment", order = 2)]
-    public class EquipmentTemplate : ScriptableObject
+    public class Equipment : ScriptableObject
     {
         public enum EquipmentType
         {
