@@ -23,7 +23,7 @@ namespace PrimoVictoria.UI.Cameras
         #endregion Cursors
 
         public EventHandler<Vector3> OnMouseOverTerrain { get;set; }
-        public EventHandler<Unit> OnMouseOverGamePiece { get; set; }
+        public EventHandler<UnitMeshController> OnMouseOverGamePiece { get; set; }
 
         private Camera view;
         private const int TERRAIN_LAYER = 8;
@@ -64,9 +64,13 @@ namespace PrimoVictoria.UI.Cameras
         private bool RaycastForUnit(Ray ray)
         {
             RaycastHit hitInfo;
-            Physics.Raycast(ray, out hitInfo, DistanceToBackground);
+
+            if (!Physics.Raycast(ray, out hitInfo, DistanceToBackground))
+                return false;
+
             var objectHit = hitInfo.collider.gameObject;
-            var unitHit = objectHit.GetComponent<Unit>();
+
+            var unitHit = objectHit.GetComponent<UnitMeshController>();
             if (unitHit != null)
             {
                 //todo: when implementing selected units and you want to charge, etc, this will matter and you will need to change the cursor more intelligently

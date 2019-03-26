@@ -16,5 +16,7 @@ namespace PrimoVictoria.DataModels
         public UnitStatistics Statistics = new UnitStatistics();
         public List<SpecialRules> UnitSpecialRules = new List<SpecialRules>();
         public List<Equipment> UnitEquipment = new List<Equipment>();
+
+        public GameObject UnitMesh; //the visual model
     }
 }

@@ -37,3 +37,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 04f96d922e989654bbb43089e3e6a700, type: 2}
   - {fileID: 11400000, guid: e9c6c1b4a2df9b246af01be3b224544c, type: 2}
   - {fileID: 11400000, guid: d1e3ce5ce8174404aa231b8e1436f701, type: 2}
+  UnitMesh: {fileID: 1176357143112116, guid: c2cf23cadbe7f9746ba6447ddf138ecc, type: 3}
