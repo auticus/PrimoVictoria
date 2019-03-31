@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using PrimoVictoria.Models;
 using PrimoVictoria.DataModels;
+using PrimoVictoria.UI.Cameras;
 
 namespace PrimoVictoria.Controllers
 { 
@@ -14,12 +16,14 @@ namespace PrimoVictoria.Controllers
         public static GameManager instance = null;  //allows us to access the instance of this object from any other script
         [SerializeField] List<UnitData> ArturianUnits;
 
-        private GameObject _selectedUnit;
         private const string PRELOAD_SCENE = "Preload";
         private const string SANDBOX_SCENE = "Sandbox";
         private const string UNITS_GAMEOBJECT = "Units";
 
-        public GameObject SelectedUnit
+        private const string SELECT_BUTTON = "Input1"; //the name of the control set in bindings
+
+        private Unit _selectedUnit;
+        public Unit SelectedUnit
         {
             get { return _selectedUnit; }
             set { _selectedUnit = value; }
@@ -49,7 +53,10 @@ namespace PrimoVictoria.Controllers
                 SceneManager.LoadScene(SANDBOX_SCENE);
             }
 
+            SubscribeToGameEvents();
+
             var unitsCollection = GameObject.Find(UNITS_GAMEOBJECT);
+
             if (unitsCollection == null)
             {
                 unitsCollection = new GameObject(UNITS_GAMEOBJECT);
@@ -63,10 +70,19 @@ namespace PrimoVictoria.Controllers
         
         }
 
+        private void SubscribeToGameEvents()
+        {
+            var camera = GameObject.Find("/Main Camera");
+            var rayCaster = camera.GetComponent<CameraRaycaster>();
+            rayCaster.OnMouseOverGamePiece += MouseOverGamePiece;
+            rayCaster.OnMouseOverTerrain += MouseOverTerrain;
+        }
+
         private void LoadUnits(GameObject unitsCollection)
         {
             //todo: a loading screen of some kind will populate what units are present, for right now this is just loaded with a test unit
             var exampleUnit = unitsCollection.AddComponent<Unit>();
+
             var unitSize = new UnitSize
             {
                 ModelCount = 10,
@@ -75,15 +91,40 @@ namespace PrimoVictoria.Controllers
             var location = new Vector3(104.81f, 0.02f, 80.736f);
             var rotation = new Vector3(0, 178, 0);
 
-            if (ArturianUnits.Count == 0)
-            {
-                Debug.LogWarning("Arturian Units has nothing");
-                return;
-            }
-
             exampleUnit.Data = ArturianUnits[0];  //obviously we need to not hardcode this, its for setup testing only
-            exampleUnit.name = "Example Unit";
+            exampleUnit.ID = 1;
             exampleUnit.InitializeUnit(1, unitSize, location, rotation);
+        }
+
+        private void MouseOverGamePiece(object sender, UnitMeshController unitHit)
+        {
+            if (Input.GetButtonDown(SELECT_BUTTON))
+            {
+                var unitsCollection = GameObject.Find(UNITS_GAMEOBJECT);
+
+                if (unitsCollection == null)
+                    Debug.LogWarning("unitsCollection was NULL!");
+
+                var units = unitsCollection.GetComponentsInChildren(typeof(Unit), includeInactive: true);
+
+                if (units == null)
+                    Debug.LogWarning("units component returned null!");
+
+                foreach (Unit unit in units)
+                {
+                    if (unit.ID == unitHit.UnitID)
+                    {
+                        SelectedUnit = unit;
+                        Debug.Log($"Selected Unit ID = {SelectedUnit.ID}");
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void MouseOverTerrain(object sender, Vector3 terrainCoordinates)
+        {
+            throw new NotImplementedException("Mouse Over Terrain is not currently implemented");
         }
     }
 }

@@ -2,7 +2,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using PrimoVictoria.Models;
-using PrimoVictoria.Controllers;
 
 namespace PrimoVictoria.UI.Cameras
 {
