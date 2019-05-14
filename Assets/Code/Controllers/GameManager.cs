@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using PrimoVictoria.Models;
@@ -14,19 +15,35 @@ namespace PrimoVictoria.Controllers
     public class GameManager : MonoBehaviour
     {
         public static GameManager instance = null;  //allows us to access the instance of this object from any other script
+        public GameObject SelectionProjector = null; //for things that we control (green)
+        public GameObject OtherSelectionProjector = null;  //for things that we cannot control (red)
+
+        public const string MESH_DECORATOR_TAG = "UnitMeshDecorator";
+        public const string SELECT_BUTTON = "Input1"; //the name of the control set in bindings
+
         [SerializeField] List<UnitData> ArturianUnits;
 
         private const string PRELOAD_SCENE = "Preload";
         private const string SANDBOX_SCENE = "Sandbox";
         private const string UNITS_GAMEOBJECT = "Units";
 
-        private const string SELECT_BUTTON = "Input1"; //the name of the control set in bindings
-
         private Unit _selectedUnit;
         public Unit SelectedUnit
         {
             get { return _selectedUnit; }
-            set { _selectedUnit = value; }
+            set
+            {
+                if (_selectedUnit != null && value != null && _selectedUnit.ID == value.ID)
+                    return;
+
+                if (_selectedUnit != null)
+                    _selectedUnit.Unselect();
+
+                _selectedUnit = value;
+
+                if (_selectedUnit != null)
+                    _selectedUnit.Select(SelectionProjector);  //todo: if its not a friendly unit we're selecting will need to pass OtherSelectionProjector
+            }
         }
 
         private void Awake()
@@ -73,9 +90,15 @@ namespace PrimoVictoria.Controllers
         private void SubscribeToGameEvents()
         {
             var camera = GameObject.Find("/Main Camera");
+            if (!camera)
+            {
+                Debug.LogError("Main camera was not found!");
+                return;
+            }
             var rayCaster = camera.GetComponent<CameraRaycaster>();
             rayCaster.OnMouseOverGamePiece += MouseOverGamePiece;
             rayCaster.OnMouseOverTerrain += MouseOverTerrain;
+            rayCaster.OnMouseClickOverGameBoard += MouseClickOverGameBoard;
         }
 
         private void LoadUnits(GameObject unitsCollection)
@@ -90,10 +113,10 @@ namespace PrimoVictoria.Controllers
             };
             var location = new Vector3(104.81f, 0.02f, 80.736f);
             var rotation = new Vector3(0, 178, 0);
-
+            
             exampleUnit.Data = ArturianUnits[0];  //obviously we need to not hardcode this, its for setup testing only
             exampleUnit.ID = 1;
-            exampleUnit.InitializeUnit(1, unitSize, location, rotation);
+            exampleUnit.InitializeUnit(unitsCollection, 1, unitSize, location, rotation);
         }
 
         private void MouseOverGamePiece(object sender, UnitMeshController unitHit)
@@ -115,7 +138,6 @@ namespace PrimoVictoria.Controllers
                     if (unit.ID == unitHit.UnitID)
                     {
                         SelectedUnit = unit;
-                        Debug.Log($"Selected Unit ID = {SelectedUnit.ID}");
                         break;
                     }
                 }
@@ -125,6 +147,15 @@ namespace PrimoVictoria.Controllers
         private void MouseOverTerrain(object sender, Vector3 terrainCoordinates)
         {
             throw new NotImplementedException("Mouse Over Terrain is not currently implemented");
+        }
+
+        private void MouseClickOverGameBoard (object sender, MouseClickEventArgs e)
+        {
+            //this will be captured whenever a mouse click has hit the game board itself and not one of the pieces or terrain structures
+            if (e.Button == MouseClickEventArgs.MouseButton.Input1)
+            {
+                SelectedUnit = null;
+            }
         }
     }
 }

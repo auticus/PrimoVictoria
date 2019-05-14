@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using PrimoVictoria.Models;
+using PrimoVictoria.Controllers;
 
 namespace PrimoVictoria.UI.Cameras
 {
@@ -21,6 +22,7 @@ namespace PrimoVictoria.UI.Cameras
         [SerializeField] Texture2D Unknown = null;
         #endregion Cursors
 
+        public EventHandler<MouseClickEventArgs> OnMouseClickOverGameBoard { get; set; }
         public EventHandler<Vector3> OnMouseOverTerrain { get;set; }
         public EventHandler<UnitMeshController> OnMouseOverGamePiece { get; set; }
 
@@ -58,8 +60,18 @@ namespace PrimoVictoria.UI.Cameras
                 return;
 
             Cursor.SetCursor(NoUnit_Default, CursorHotspot, CursorMode.Auto);
+
+            if (Input.GetButtonDown(GameManager.SELECT_BUTTON))
+            {
+                OnMouseClickOverGameBoard?.Invoke(this, new MouseClickEventArgs() { MousePosition=Input.mousePosition, Button = MouseClickEventArgs.MouseButton.Input1 });
+            }
         }
 
+        /// <summary>
+        /// Searches for a mesh controller (the 3d model) that is hit and returns it, which should contain unit meta data
+        /// </summary>
+        /// <param name="ray"></param>
+        /// <returns></returns>
         private bool RaycastForUnit(Ray ray)
         {
             RaycastHit hitInfo;
@@ -82,8 +94,14 @@ namespace PrimoVictoria.UI.Cameras
             return false;
         }
 
+        /// <summary>
+        /// Searches for a piece of terrain (house, structure, etc any model that lives on the TERRAIN layer) and returns the vector3 of that object 
+        /// </summary>
+        /// <param name="ray"></param>
+        /// <returns></returns>
         private bool RaycastForTerrain(Ray ray)
         {
+            //todo: return the terrain piece back, not a vector3.  A vector3 is pointless
             RaycastHit hitInfo;
             var terrainLayerMask = 1 << TERRAIN_LAYER;
             var terrainHit = Physics.Raycast(ray, out hitInfo, DistanceToBackground, terrainLayerMask);

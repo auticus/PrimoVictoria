@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using PrimoVictoria.DataModels;
+using PrimoVictoria.Controllers;
 
 namespace PrimoVictoria.Models
 {
@@ -52,7 +53,7 @@ namespace PrimoVictoria.Models
         /// <param name="initialSize"></param>
         /// <param name="unitLocation"></param>
         /// <param name="rotation">Euler angles that are then turned into a quaternion</param>
-        public void InitializeUnit(int unitID, UnitSize initialSize, Vector3 unitLocation, Vector3 rotation)
+        public void InitializeUnit(GameObject parent, int unitID, UnitSize initialSize, Vector3 unitLocation, Vector3 rotation)
         {
             ID = unitID;
 
@@ -84,6 +85,31 @@ namespace PrimoVictoria.Models
                 {
                     PivotMesh = soldier;
                 }
+
+                soldier.transform.SetParent(parent.transform);
+            }
+        }
+
+        public void Select(GameObject projectorPrefab)
+        {
+            var selectionObject = Instantiate(projectorPrefab);
+            var projector = selectionObject.GetComponentInChildren<Projector>();
+            projector.orthographicSize = (float)Data.SelectionOrthoSize;
+
+            foreach(var mesh in SoldierMeshes)
+            {
+                selectionObject.transform.SetParent(mesh.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the circle goes
+            }
+        }
+
+        public void Unselect()
+        {
+            //this may not be the best way to go about this but doing research, the performance shouldn't be bad since Unity keeps a list of all actual tagged objects
+            //if performance is an issue, try keeping the projectors in an arraylist and just hit that
+            var projectors = GameObject.FindGameObjectsWithTag(GameManager.MESH_DECORATOR_TAG);
+            foreach (var projector in projectors)
+            {
+                Destroy(projector);
             }
         }
     }

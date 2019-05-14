@@ -43,5 +43,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98c7411de46aa5446a7b4d205eb6072a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  SelectionProjector: {fileID: 115082, guid: 16a019904df21f94ebadcb47c165a2f8, type: 3}
+  OtherSelectionProjector: {fileID: 115082, guid: 539c1e6b552a392469ab188c7462f8de,
+    type: 3}
   ArturianUnits:
   - {fileID: 11400000, guid: df42265c966779e4a8644f6a519684e8, type: 2}

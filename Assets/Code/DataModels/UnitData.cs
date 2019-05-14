@@ -18,5 +18,6 @@ namespace PrimoVictoria.DataModels
         public List<Equipment> UnitEquipment = new List<Equipment>();
 
         public GameObject UnitMesh; //the visual model
+        public double SelectionOrthoSize = 0.7; //the size of the selection cursor under the mesh when the unit is selected
     }
 }
