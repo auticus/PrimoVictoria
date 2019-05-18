@@ -112,5 +112,21 @@ namespace PrimoVictoria.Models
                 Destroy(projector);
             }
         }
+
+        public void MoveUnit(Vector3 pivotMeshPosition, bool isRunning)
+        {
+            var pivotController = PivotMesh.GetComponent<UnitMeshController>();
+
+            if (pivotController == null)
+            {
+                Debug.LogError("Unit Mesh does not have a controller!");
+                return;
+            }
+
+            pivotController.Speed = isRunning ? Data.RunSpeed : Data.WalkSpeed;
+            pivotController.Destination = pivotMeshPosition;
+
+            //todo: move the rest of the unit based on a grid
+        }
     }
 }

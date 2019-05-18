@@ -19,5 +19,8 @@ namespace PrimoVictoria.DataModels
 
         public GameObject UnitMesh; //the visual model
         public double SelectionOrthoSize = 0.7; //the size of the selection cursor under the mesh when the unit is selected
+
+        public float WalkSpeed = 2.0f;  //the navagent speed when walking (2.0 is an infantry man walk)
+        public float RunSpeed = 5.0f;  //the navagent speed when running (5.0 is an infantry man run)
     }
 }

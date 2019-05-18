@@ -20,6 +20,7 @@ namespace PrimoVictoria.Controllers
 
         public const string MESH_DECORATOR_TAG = "UnitMeshDecorator";
         public const string SELECT_BUTTON = "Input1"; //the name of the control set in bindings
+        public const string EXECUTE_BUTTON = "Input2"; 
 
         [SerializeField] List<UnitData> ArturianUnits;
 
@@ -119,28 +120,22 @@ namespace PrimoVictoria.Controllers
             exampleUnit.InitializeUnit(unitsCollection, 1, unitSize, location, rotation);
         }
 
-        private void MouseOverGamePiece(object sender, UnitMeshController unitHit)
+        /// <summary>
+        /// This is fired off whenever the mouse moves over a game piece, and will also return if a button was clicked 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MouseOverGamePiece(object sender, MouseClickGamePieceEventArgs e)
         {
-            if (Input.GetButtonDown(SELECT_BUTTON))
+            if (e.Button == MouseClickEventArgs.MouseButton.Input1)
             {
-                var unitsCollection = GameObject.Find(UNITS_GAMEOBJECT);
-
-                if (unitsCollection == null)
-                    Debug.LogWarning("unitsCollection was NULL!");
-
-                var units = unitsCollection.GetComponentsInChildren(typeof(Unit), includeInactive: true);
-
-                if (units == null)
-                    Debug.LogWarning("units component returned null!");
-
-                foreach (Unit unit in units)
-                {
-                    if (unit.ID == unitHit.UnitID)
-                    {
-                        SelectedUnit = unit;
-                        break;
-                    }
-                }
+                //left-clicking on a unit will select that unit
+                SelectUnitMeshes(e.GamePieceMesh.UnitID);
+            }
+            if (e.Button == MouseClickEventArgs.MouseButton.Input2)
+            {
+                //right-clicking on a unit is the same as deselecting that unit
+                SelectedUnit = null;
             }
         }
 
@@ -149,12 +144,42 @@ namespace PrimoVictoria.Controllers
             throw new NotImplementedException("Mouse Over Terrain is not currently implemented");
         }
 
+        /// <summary>
+        /// this will be captured whenever a mouse click has hit the game board itself and not one of the pieces or terrain structures
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MouseClickOverGameBoard (object sender, MouseClickEventArgs e)
         {
-            //this will be captured whenever a mouse click has hit the game board itself and not one of the pieces or terrain structures
             if (e.Button == MouseClickEventArgs.MouseButton.Input1)
             {
                 SelectedUnit = null;
+            }
+            if (e.Button == MouseClickEventArgs.MouseButton.Input2 && SelectedUnit != null)
+            {
+                SelectedUnit.MoveUnit(e.WorldPosition, isRunning: false);
+            }
+        }
+
+        private void SelectUnitMeshes(int unitID)
+        {
+            var unitsCollection = GameObject.Find(UNITS_GAMEOBJECT);
+
+            if (unitsCollection == null)
+                Debug.LogWarning("unitsCollection was NULL!");
+
+            var units = unitsCollection.GetComponentsInChildren(typeof(Unit), includeInactive: true);
+
+            if (units == null)
+                Debug.LogWarning("units component returned null!");
+
+            foreach (Unit unit in units)
+            {
+                if (unit.ID == unitID)
+                {
+                    SelectedUnit = unit;
+                    break;
+                }
             }
         }
     }

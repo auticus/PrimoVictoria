@@ -24,7 +24,7 @@ namespace PrimoVictoria.UI.Cameras
 
         public EventHandler<MouseClickEventArgs> OnMouseClickOverGameBoard { get; set; }
         public EventHandler<Vector3> OnMouseOverTerrain { get;set; }
-        public EventHandler<UnitMeshController> OnMouseOverGamePiece { get; set; }
+        public EventHandler<MouseClickGamePieceEventArgs> OnMouseOverGamePiece { get; set; }
 
         private Camera view;
         private const int TERRAIN_LAYER = 8;
@@ -61,9 +61,17 @@ namespace PrimoVictoria.UI.Cameras
 
             Cursor.SetCursor(NoUnit_Default, CursorHotspot, CursorMode.Auto);
 
+
+            if (!Physics.Raycast(ray, out RaycastHit hitInfo, DistanceToBackground))
+                return;
+
             if (Input.GetButtonDown(GameManager.SELECT_BUTTON))
             {
-                OnMouseClickOverGameBoard?.Invoke(this, new MouseClickEventArgs() { MousePosition=Input.mousePosition, Button = MouseClickEventArgs.MouseButton.Input1 });
+                OnMouseClickOverGameBoard?.Invoke(this, new MouseClickEventArgs() { ScreenPosition=Input.mousePosition, WorldPosition = hitInfo.point, Button = MouseClickEventArgs.MouseButton.Input1 });
+            }
+            else if (Input.GetButtonDown(GameManager.EXECUTE_BUTTON))
+            {
+                OnMouseClickOverGameBoard?.Invoke(this, new MouseClickEventArgs() { ScreenPosition = Input.mousePosition, WorldPosition = hitInfo.point, Button = MouseClickEventArgs.MouseButton.Input2 });
             }
         }
 
@@ -87,7 +95,17 @@ namespace PrimoVictoria.UI.Cameras
                 //todo: when implementing selected units and you want to charge, etc, this will matter and you will need to change the cursor more intelligently
                 //for right now every unit we just use the same cursor for
                 Cursor.SetCursor(NoUnit_Friendly, CursorHotspot, CursorMode.Auto);
-                OnMouseOverGamePiece?.Invoke(this, unitHit);
+                MouseClickGamePieceEventArgs args = new MouseClickGamePieceEventArgs() { ScreenPosition = Input.mousePosition, WorldPosition = hitInfo.point, GamePieceMesh = unitHit };
+
+                if (Input.GetButtonDown(GameManager.EXECUTE_BUTTON))
+                {
+                    args.Button = MouseClickEventArgs.MouseButton.Input2;
+                }
+
+                if (Input.GetButtonDown(GameManager.SELECT_BUTTON))
+                    args.Button = MouseClickEventArgs.MouseButton.Input1;
+
+                OnMouseOverGamePiece?.Invoke(this, args);
                 return true;
             }
 
