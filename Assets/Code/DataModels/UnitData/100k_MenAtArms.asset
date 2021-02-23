@@ -10,33 +10,22 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8d0a29d55c094fe4c8ffd78c1f055b5f, type: 3}
-  m_Name: Arturian_ConscriptaValos
+  m_Name: 100k_MenAtArms
   m_EditorClassIdentifier: 
-  Name: Conscripta Valos
+  Name: Men At Arms
   Faction: {fileID: 11400000, guid: 1f090203333acee4ab7860efcecc89c8, type: 2}
   UnitType: 1
-  AvailableUnitSizes:
-  - UnitType: 3
-    ModelCount: 10
-  - UnitType: 4
-    ModelCount: 20
-  - UnitType: 5
-    ModelCount: 40
   Statistics:
     Movement: 5
-    MeleeSkill: 12
-    RangedSkill: 10
-    Strength: 6
-    Defense: 10
-    Hits: 5
-    Stamina: 3
-    Attacks: 5
-    Command: 13
-  UnitSpecialRules: 00000000
-  UnitEquipment:
-  - {fileID: 11400000, guid: 04f96d922e989654bbb43089e3e6a700, type: 2}
-  - {fileID: 11400000, guid: e9c6c1b4a2df9b246af01be3b224544c, type: 2}
-  - {fileID: 11400000, guid: d1e3ce5ce8174404aa231b8e1436f701, type: 2}
+    Volley: 1
+    Clash: 2
+    Attacks: 1
+    Wounds: 1
+    Resolve: 2
+    Defense: 2
+    Evasion: 0
+  UnitSpecialRules: 
+  UnitEquipment: []
   UnitMesh: {fileID: 1176357143112116, guid: c2cf23cadbe7f9746ba6447ddf138ecc, type: 3}
   SelectionOrthoSize: 0.7
   WalkSpeed: 2

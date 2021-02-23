@@ -75,6 +75,7 @@ namespace PrimoVictoria.Controllers
 
             var unitsCollection = GameObject.Find(UNITS_GAMEOBJECT);
 
+            //add my Units collection if it doesn't already exist
             if (unitsCollection == null)
             {
                 unitsCollection = new GameObject(UNITS_GAMEOBJECT);
@@ -104,13 +105,17 @@ namespace PrimoVictoria.Controllers
 
         private void LoadUnits(GameObject unitsCollection)
         {
+            //todo: this whole thing is hardcoded and is only for dev purposes, this will need redefined after development to not hardcode the unit types
             //todo: a loading screen of some kind will populate what units are present, for right now this is just loaded with a test unit
+
+            //IMPORTANT
+            //the Game Manager instance in the editor will have had units added to it (which is why there is no code here adding any but we are referencing them)
             var exampleUnit = unitsCollection.AddComponent<Unit>();
 
             var unitSize = new UnitSize
             {
                 ModelCount = 10,
-                UnitType = UnitSizeType.Unit
+                UnitType = UnitSizeType.Infantry
             };
             var location = new Vector3(104.81f, 0.02f, 80.736f);
             var rotation = new Vector3(0, 178, 0);

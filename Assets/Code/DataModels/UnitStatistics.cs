@@ -6,13 +6,12 @@ namespace PrimoVictoria.DataModels
     public class UnitStatistics
     {
         public int Movement;
-        public int MeleeSkill;
-        public int RangedSkill;
-        public int Strength;
-        public int Defense;
-        public int Hits;
-        public int Stamina;
+        public int Volley;
+        public int Clash;
         public int Attacks;
-        public int Command;
+        public int Wounds;
+        public int Resolve;
+        public int Defense;
+        public int Evasion;
     }
 }

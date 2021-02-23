@@ -4,12 +4,9 @@
     {
         Unknown = 0,
         Infantry,
-        LargeInfantry,
+        Brute,
         Cavalry,
-        LargeCavalry,
         Monster,
-        Artillery,
-        Leader,
-        MonstrousLeader
+        Character
     }
 }

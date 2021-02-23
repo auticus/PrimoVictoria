@@ -12,7 +12,6 @@ namespace PrimoVictoria.DataModels
         public string Name = "New Unit Name";
         public Faction Faction;
         public UnitTypes UnitType = UnitTypes.Unknown;
-        public List<UnitSize> AvailableUnitSizes = new List<UnitSize>();
         public UnitStatistics Statistics = new UnitStatistics();
         public List<SpecialRules> UnitSpecialRules = new List<SpecialRules>();
         public List<Equipment> UnitEquipment = new List<Equipment>();
