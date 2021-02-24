@@ -271,7 +271,18 @@ PrefabInstance:
       objectReference: {fileID: 115082, guid: 539c1e6b552a392469ab188c7462f8de, type: 3}
     - target: {fileID: 1776537780953198819, guid: 2759280e661d4af4cb4c013670e06656,
         type: 3}
+      propertyPath: Faction_0_Units.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1776537780953198819, guid: 2759280e661d4af4cb4c013670e06656,
+        type: 3}
       propertyPath: ArturianUnits.Array.data[0]
+      value: 
+      objectReference: {fileID: 11400000, guid: 6e7c8d98e8e2e5444a4d8225a2c5a52d,
+        type: 2}
+    - target: {fileID: 1776537780953198819, guid: 2759280e661d4af4cb4c013670e06656,
+        type: 3}
+      propertyPath: Faction_0_Units.Array.data[0]
       value: 
       objectReference: {fileID: 11400000, guid: 6e7c8d98e8e2e5444a4d8225a2c5a52d,
         type: 2}

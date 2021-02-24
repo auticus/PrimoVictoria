@@ -9,6 +9,6 @@ namespace PrimoVictoria.DataModels
     public class UnitSize
     {
         public UnitSizeType UnitType;
-        public int ModelCount;
+        public int StandCount; //how many stands make up the unit.  Stands will hold models on them.  Units are composed of multiple stands
     }
 }

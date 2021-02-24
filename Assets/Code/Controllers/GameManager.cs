@@ -22,7 +22,7 @@ namespace PrimoVictoria.Controllers
         public const string SELECT_BUTTON = "Input1"; //the name of the control set in bindings
         public const string EXECUTE_BUTTON = "Input2"; 
 
-        [SerializeField] List<UnitData> ArturianUnits;
+        [SerializeField] List<UnitData> Faction_0_Units;
 
         private const string PRELOAD_SCENE = "Preload";
         private const string SANDBOX_SCENE = "Sandbox";
@@ -114,13 +114,13 @@ namespace PrimoVictoria.Controllers
 
             var unitSize = new UnitSize
             {
-                ModelCount = 10,
+                StandCount = 1,
                 UnitType = UnitSizeType.Infantry
             };
             var location = new Vector3(104.81f, 0.02f, 80.736f);
             var rotation = new Vector3(0, 178, 0);
             
-            exampleUnit.Data = ArturianUnits[0];  //obviously we need to not hardcode this, its for setup testing only
+            exampleUnit.Data = Faction_0_Units[0];  //obviously we need to not hardcode this, its for setup testing only
             exampleUnit.ID = 1;
             exampleUnit.InitializeUnit(unitsCollection, 1, unitSize, location, rotation);
         }

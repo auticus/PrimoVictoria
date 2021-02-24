@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: 100k
   m_EditorClassIdentifier: 
   Name: 100 Kingdoms
+  RuleSystem: 1

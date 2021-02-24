@@ -6,5 +6,6 @@ namespace PrimoVictoria.DataModels
     public class Faction : ScriptableObject
     {
         public string Name;
+        public RuleSystems RuleSystem;
     }
 }

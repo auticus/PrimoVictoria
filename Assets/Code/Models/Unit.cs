@@ -7,7 +7,8 @@ using PrimoVictoria.Controllers;
 namespace PrimoVictoria.Models
 {
     /// <summary>
-    /// Unit class that represents the entirety of a unit and who belongs to it
+    /// Unit class that represents the entirety of a unit and who belongs to it (all of the models that make up the unit)
+    /// Added via the manager when creating a new unit
     /// </summary>
     public class Unit : MonoBehaviour
     {
@@ -63,6 +64,7 @@ namespace PrimoVictoria.Models
             SoldierMeshes.Clear();
 
             //todo: implement actually creating the size, right now this just does one guy for lolz
+            //should be using initialSize
             var modelCount = 1;
             
             for (int i = 0; i < modelCount; i++)
