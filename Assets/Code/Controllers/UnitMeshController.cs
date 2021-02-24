@@ -1,11 +1,11 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
 
-namespace PrimoVictoria.Models
+namespace PrimoVictoria.Controllers
 {
     /// <summary>
     /// Interface between the unit object on the master controller and each of the individual soldier meshes on the battlefielde
-    /// This is attached to the character prefab and requires an Animator and NavMeshAgent component on the prefab
+    /// This is attached to the character model prefab and requires an Animator and NavMeshAgent component on the prefab
     /// </summary>
     [RequireComponent(typeof(NavMeshAgent))]
     [RequireComponent(typeof(Animator))]
