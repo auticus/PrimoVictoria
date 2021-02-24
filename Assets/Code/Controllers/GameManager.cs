@@ -115,7 +115,7 @@ namespace PrimoVictoria.Controllers
             var unitSize = new UnitSize
             {
                 StandCount = 1,
-                UnitType = UnitSizeType.Infantry
+                UnitType = UnitTypes.Infantry
             };
             var location = new Vector3(104.81f, 0.02f, 80.736f);
             var rotation = new Vector3(0, 178, 0);

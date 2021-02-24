@@ -4,8 +4,8 @@ using System;
 using UnityEngine;
 using PrimoVictoria.Models;
 
-namespace PrimoVictoria.DataModels
-{
+namespace PrimoVictoria.Models
+{ 
     /// <summary>
     /// Stands represent the trays on which a model stands.  They hold X number of models
     /// </summary>
