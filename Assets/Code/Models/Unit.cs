@@ -14,8 +14,11 @@ namespace PrimoVictoria.Models
     {
         public UnitData Data;
         public int ID;
-        private List<GameObject> SoldierMeshes;
-        private GameObject PivotMesh;  //the central figure in the first rank
+        private List<Stand> _stands;
+        private readonly GameObject _pivotMesh;  //the central figure in the first rank
+        private GameObject _parent; //the owning game object
+
+        private const string STANDS_GAMEOBJECT = "Stands";
 
         private void Start()
         {
@@ -29,7 +32,7 @@ namespace PrimoVictoria.Models
 
         public Vector3 GetLocation()
         {
-            return PivotMesh.transform.position;
+            return _pivotMesh.transform.position;
         }
 
         /// <summary>
@@ -38,7 +41,7 @@ namespace PrimoVictoria.Models
         /// <returns></returns>
         public Vector3 GetRotation()
         {
-            return PivotMesh.transform.eulerAngles;
+            return _pivotMesh.transform.eulerAngles;
         }
 
         public void SetRotation(float rotation)
@@ -54,53 +57,45 @@ namespace PrimoVictoria.Models
         /// <param name="initialSize"></param>
         /// <param name="unitLocation"></param>
         /// <param name="rotation">Euler angles that are then turned into a quaternion</param>
-        public void InitializeUnit(GameObject parent, int unitID, UnitSize initialSize, Vector3 unitLocation, Vector3 rotation)
+        public void InitializeUnit(GameObject parent, int unitID, int standCount, Vector3 unitLocation, Vector3 rotation)
         {
             ID = unitID;
+            _parent = parent;
+            _stands = new List<Stand>();
 
-            if (SoldierMeshes == null)
-                SoldierMeshes = new List<GameObject>();
+            var stands = GameObject.Find(STANDS_GAMEOBJECT);
 
-            SoldierMeshes.Clear();
-
-            //todo: implement actually creating the size, right now this just does one guy for lolz
-            //should be using initialSize
-            var modelCount = 1;
-            
-            for (int i = 0; i < modelCount; i++)
+            //add my stands collection if it doesn't already exist
+            if (stands == null)
             {
-                //todo: first guy in will likely be a standard bearer mesh of some kind so not everything will just use the UnitMesh object here
-                var soldier = Instantiate(original: Data.UnitMesh, position: unitLocation, rotation: Quaternion.Euler(rotation));
+                stands = new GameObject(STANDS_GAMEOBJECT);
+            }
 
-                if (soldier == null)
-                    Debug.Log("Soldier is null");
+            //initialize the stands in the unit
+            //todo: we shouldn't be hardcoding positions and rotation this is just for demo sake
+            for (int i = 0; i < standCount; i++)
+            {
+                var stand = stands.AddComponent<Stand>();
+                var location = new Vector3(104.81f, 0.02f, 80.736f);
+                var demoRotation = new Vector3(0, 178, 0);
 
-                var controller = soldier.GetComponent<UnitMeshController>();
+                stand.StandCapacity = 4;
+                stand.StandVisible = false;
+                stand.InitializeStand(this, Data,  location, demoRotation); 
 
-                if (controller == null)
-                    Debug.Log("Controller is null");
-
-                controller.UnitID = unitID;
-
-                SoldierMeshes.Add(soldier);
-                if (i == 0) //first item created is the pivot guy
-                {
-                    PivotMesh = soldier;
-                }
-
-                soldier.transform.SetParent(parent.transform);
+                _stands.Add(stand);
             }
         }
 
+        /// <summary>
+        /// Selects the Unit overall, which should highlight all of the stands within it
+        /// </summary>
+        /// <param name="projectorPrefab"></param>
         public void Select(GameObject projectorPrefab)
         {
-            var selectionObject = Instantiate(projectorPrefab);
-            var projector = selectionObject.GetComponentInChildren<Projector>();
-            projector.orthographicSize = (float)Data.SelectionOrthoSize;
-
-            foreach(var mesh in SoldierMeshes)
+            foreach (var stand in _stands)
             {
-                selectionObject.transform.SetParent(mesh.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the circle goes
+                stand.Select(projectorPrefab);
             }
         }
 
@@ -115,18 +110,18 @@ namespace PrimoVictoria.Models
             }
         }
 
-        public void MoveUnit(Vector3 pivotMeshPosition, bool isRunning)
+        /// <summary>
+        /// Moves the unit
+        /// </summary>
+        /// <param name="pivotMeshPosition">Pivot Mesh Position is the point on the table that the mouse was clicked.
+        /// It is the location that the pivot soldier will land on and the others around him will be spaced as they need</param>
+        /// <param name="isRunning"></param>
+        public void Move(Vector3 pivotMeshPosition, bool isRunning)
         {
-            var pivotController = PivotMesh.GetComponent<UnitMeshController>();
-
-            if (pivotController == null)
+            foreach (var stand in _stands)
             {
-                Debug.LogError("Unit Mesh does not have a controller!");
-                return;
+                stand.Move(pivotMeshPosition, isRunning);
             }
-
-            pivotController.Speed = isRunning ? Data.RunSpeed : Data.WalkSpeed;
-            pivotController.Destination = pivotMeshPosition;
 
             //todo: move the rest of the unit based on a grid
         }

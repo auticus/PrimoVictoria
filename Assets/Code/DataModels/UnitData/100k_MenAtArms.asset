@@ -15,6 +15,7 @@ MonoBehaviour:
   Name: Men At Arms
   Faction: {fileID: 11400000, guid: 1f090203333acee4ab7860efcecc89c8, type: 2}
   UnitType: 1
+  ModelsPerStand: 4
   Statistics:
     Movement: 5
     Volley: 1

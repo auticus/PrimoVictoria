@@ -112,17 +112,12 @@ namespace PrimoVictoria.Controllers
             //the Game Manager instance in the editor will have had units added to it (which is why there is no code here adding any but we are referencing them)
             var exampleUnit = unitsCollection.AddComponent<Unit>();
 
-            var unitSize = new UnitSize
-            {
-                StandCount = 1,
-                UnitType = UnitTypes.Infantry
-            };
             var location = new Vector3(104.81f, 0.02f, 80.736f);
             var rotation = new Vector3(0, 178, 0);
             
-            exampleUnit.Data = Faction_0_Units[0];  //obviously we need to not hardcode this, its for setup testing only
+            exampleUnit.Data = Faction_0_Units[0];  //obviously we need to not hardcode this, its for setup testing only - requires that this element exist on the editor window
             exampleUnit.ID = 1;
-            exampleUnit.InitializeUnit(unitsCollection, 1, unitSize, location, rotation);
+            exampleUnit.InitializeUnit(unitsCollection, 1, 1, location, rotation);
         }
 
         /// <summary>
@@ -162,7 +157,7 @@ namespace PrimoVictoria.Controllers
             }
             if (e.Button == MouseClickEventArgs.MouseButton.Input2 && SelectedUnit != null)
             {
-                SelectedUnit.MoveUnit(e.WorldPosition, isRunning: false);
+                SelectedUnit.Move(e.WorldPosition, isRunning: false);
             }
         }
 
