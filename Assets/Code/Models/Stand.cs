@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System;
 using UnityEngine;
-using PrimoVictoria.Models;
 using PrimoVictoria.Controllers;
 using PrimoVictoria.DataModels;
 
@@ -15,59 +13,34 @@ namespace PrimoVictoria.Models
     {
         public Unit ParentUnit;
         public Guid Id;
-        public List<GameObject> ModelMeshes; //the living meshes
+        public List<GameObject> ModelMeshes; //the warrior meshes
+        public GameObject StandMesh; //the mesh that is the stand that the models are standing on
         public int StandCapacity;  //how many models fit on the stand at full capacity
-        public bool StandVisible;  //if true will draw the stand that the models are on, if false will not (mostly useful for debugging / dev work)
-                                   //todo: add a stand object that they can stand on that can be turned off and on
+        
+        private bool _visible;  //if true will draw the stand that the models are on, if false will not (mostly useful for debugging / dev work)
+                                //note: i'd much rather use properties here and getters and setters but thats not currently the unity way
+
+        private bool _modelsVisible;  //if true will draw the model meshes on the stand.  If false, will only draw the stand
 
         private GameObject _pivotMesh;  //the central figure in the first rank, the model that gets moved first and the others on the stand distance around
                                         //todo the pivot mesh should become the stand itself not a model on the stand
-        private UnitData _data; //data pertinent to the unit overall
+        private UnitData _unitData; //data pertinent to the unit overall
 
-        public void InitializeStand(Unit parent, UnitData data, Vector3 location, Vector3 rotation)
+        public void InitializeStand(Unit parent, UnitData data, Vector3 location, Vector3 rotation, bool visible, bool modelsVisible)
         {
             Id = Guid.NewGuid();
             ParentUnit = parent;
-            _data = data;
+            _unitData = data;
+            _visible = visible;
+            _modelsVisible = modelsVisible;
 
             if (ModelMeshes == null)
                 ModelMeshes = new List<GameObject>();
 
             ModelMeshes.Clear();
-
-            //todo: implement actually creating the size, right now this just does one guy for lolz
-            //should be using stand capacity
-            var modelCount = 1;
-
-            for (int i = 0; i < modelCount; i++)
-            {
-                //todo: first guy in will likely be a standard bearer mesh of some kind so not everything will just use the UnitMesh object here
-                var soldier = Instantiate(original: _data.UnitMesh, position: location, rotation: Quaternion.Euler(rotation));
-
-                if (soldier == null)
-                {
-                    Debug.Log("Stand::InitializeStand - Model Mesh is null after instantiation");
-                    continue;
-                }
-
-                var controller = soldier.GetComponent<UnitMeshController>();
-
-                if (controller == null)
-                {
-                    Debug.LogWarning("Stand::InitializeStand - mesh controller was not found on the mesh");
-                    continue;
-                }
-
-                controller.UnitID = parent.ID;
-
-                ModelMeshes.Add(soldier);
-                if (i == 0) //first item created is the pivot guy
-                {
-                    _pivotMesh = soldier;
-                }
-
-                soldier.transform.SetParent(parent.transform);
-            }
+            
+            InitializeStandMesh(parent, rotation, location, visible);
+            AddModelMeshesToStand(location, rotation);  
         }
 
         /// <summary>
@@ -91,17 +64,30 @@ namespace PrimoVictoria.Models
             return _pivotMesh.transform.position;
         }
 
-        public void Select(GameObject projectorPrefab)
+        public bool GetVisibility()
         {
-            var selectionObject = Instantiate(projectorPrefab);
-            var projector = selectionObject.GetComponentInChildren<Projector>();
-            projector.orthographicSize = (float)_data.SelectionOrthoSize;
+            return _visible;
+        }
 
-            //draw the projector prefab (the circle under the models) under the models
-            foreach (var mesh in ModelMeshes)
-            {
-                selectionObject.transform.SetParent(mesh.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the circle goes
-            }
+        public void SetVisibility(bool value)
+        {
+            _visible = value;
+        }
+
+        public bool GetModelVisibility()
+        {
+            return _modelsVisible;
+        }
+
+        public void SetModelVisibility(bool value)
+        {
+            _modelsVisible = value;
+        }
+
+        public void Select(Projectors projectors, bool isFriendly)
+        {
+            if (_visible) SelectStand(projectors, isFriendly); 
+            else SelectModelMeshes(projectors, isFriendly);
         }
 
         /// <summary>
@@ -120,10 +106,122 @@ namespace PrimoVictoria.Models
                 return;
             }
 
-            pivotController.Speed = isRunning ? _data.RunSpeed : _data.WalkSpeed;
+            pivotController.Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
             pivotController.Destination = pivotMeshPosition;
 
             //todo: move the rest of the unit based on a grid
         }
+
+        #region Private Methods
+
+        /// <summary>
+        /// Draws selection projector around the entire stand
+        /// </summary>
+        /// <param name="projectors"></param>
+        /// <param name="isFriendly"></param>
+        private void SelectStand(Projectors projectors, bool isFriendly)
+        {
+            var selectionObject = GetSelectionProjector(projectors, isFriendly);
+            selectionObject.transform.SetParent(StandMesh.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the projector goes
+        }
+
+        /// <summary>
+        /// Draws selection projector around each model mesh
+        /// </summary>
+        /// <param name="projectors"></param>
+        /// <param name="isFriendly"></param>
+        private void SelectModelMeshes(Projectors projectors, bool isFriendly)
+        {
+            //draw the projector prefab (the circle under the models) under the models
+            foreach (var mesh in ModelMeshes)
+            {
+                var selectionObject = GetSelectionProjector(projectors, isFriendly);
+                selectionObject.transform.SetParent(mesh.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the circle goes
+            }
+        }
+
+        private GameObject GetSelectionProjector(Projectors projectors, bool isFriendly)
+        {
+            var projectorPrefab = GetActiveProjectorPrefab(projectors, isFriendly: isFriendly);
+            var selectionObject = Instantiate(projectorPrefab);
+            var projector = selectionObject.GetComponentInChildren<Projector>();
+            projector.orthographicSize = GetProjectorOrthoSize();
+
+            return selectionObject;
+        }
+
+        /// <summary>
+        /// Based on if the stand is visible and what the unit type is - return the size of the selection cursor
+        /// </summary>
+        /// <returns></returns>
+        private float GetProjectorOrthoSize()
+        {
+            if (_visible && _unitData.UnitType == UnitTypes.Infantry)
+                return (float)_unitData.SelectionInfantryStandOrthoSize;
+            if (!_visible && _unitData.UnitType == UnitTypes.Infantry)
+                return (float)_unitData.SelectionInfantryOrthoSize;
+            
+            Debug.LogError($"Stand::GetProjectorOrthoSize encountered a unit type that is not currently supported - {_unitData.UnitType}");
+            throw new ArgumentException($"Encountered Unit Type is not supported - {_unitData.UnitType}");
+        }
+
+        private GameObject GetActiveProjectorPrefab(Projectors projector, bool isFriendly)
+        {
+            if (isFriendly && _visible) return projector.FriendlySquareSelection;
+            if (isFriendly) return projector.FriendlyCircleSelection;
+            if (!isFriendly && _visible) return projector.OtherSquareSelection;
+            if (!isFriendly) return projector.OtherCircleSelection;
+
+            throw new Exception($"Invalid data state in Stand::GetActiveProjector");
+        }
+
+        private void InitializeStandMesh(Unit parent, Vector3 rotation, Vector3 location, bool visible)
+        {
+            Debug.Log($"Instantiating stand  location={location} rotation={rotation}");
+            StandMesh = Instantiate(original: _unitData.StandMesh, position: location, rotation: Quaternion.Euler(rotation));
+
+            StandMesh.transform.SetParent(parent.transform);
+            StandMesh.SetActive(visible);
+            var standController = StandMesh.AddComponent<StandController>();
+            standController.ParentUnit = parent;
+            standController.StandData = this;
+        }
+
+        private void AddModelMeshesToStand(Vector3 location, Vector3 rotation)
+        {
+            var modelCount = 1;
+            for (int i = 0; i < modelCount; i++)
+            {
+                //todo: first guy in will likely be a standard bearer mesh of some kind so not everything will just use the UnitMesh object here
+                //this will likely take the form of an enum or something explaining each element in the UnitMeshes list and what it really is
+                var soldier = Instantiate(original: _unitData.UnitMeshes[0], position: location, rotation: Quaternion.Euler(rotation));
+
+                if (soldier == null)
+                {
+                    Debug.Log("Stand::InitializeStand - Model Mesh is null after instantiation");
+                    continue;
+                }
+
+                var controller = soldier.GetComponent<UnitMeshController>();
+
+                if (controller == null)
+                {
+                    Debug.LogWarning("Stand::InitializeStand - mesh controller was not found on the mesh");
+                    continue;
+                }
+                controller.UnitID = ParentUnit.ID;
+
+                ModelMeshes.Add(soldier);
+                if (i == 0) //first item created is the pivot guy
+                {
+                    _pivotMesh = soldier;
+                }
+
+                soldier.transform.SetParent(ParentUnit.transform);
+                soldier.SetActive(_modelsVisible);
+            }
+        }
+
+        #endregion Private Methods
     }
 }

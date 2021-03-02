@@ -18,14 +18,24 @@ namespace PrimoVictoria.DataModels
         public List<Equipment> UnitEquipment = new List<Equipment>();
 
         /// <summary>
-        /// The visual model
+        /// The visual model(s) representing the warriors
         /// </summary>
-        public GameObject UnitMesh;
+        public List<GameObject> UnitMeshes; //todo: because multiples can be put here need some type of data element on this object that defines what each element index is (normal, standard, etc)
 
         /// <summary>
-        /// The size of the selection cursor under the mesh when the unit is selected
+        /// The stand mesh that the models stand on
         /// </summary>
-        public double SelectionOrthoSize = 0.7;
+        public GameObject StandMesh;
+
+        /// <summary>
+        /// The size of the selection cursor under the solder mesh when the unit is selected
+        /// </summary>
+        public double SelectionInfantryOrthoSize = 0.7;
+
+        /// <summary>
+        /// The size of an infantry stand projector select
+        /// </summary>
+        public double SelectionInfantryStandOrthoSize = 1;
 
         public float WalkSpeed = 2.0f;  //the navagent speed when walking (2.0 is an infantry man walk)
         public float RunSpeed = 5.0f;  //the navagent speed when running (5.0 is an infantry man run)

@@ -261,6 +261,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1776537780953198819, guid: 2759280e661d4af4cb4c013670e06656,
         type: 3}
+      propertyPath: Projectors
+      value: 
+      objectReference: {fileID: 11400000, guid: af01926af9100c54d9fcc7f07beafdde,
+        type: 2}
+    - target: {fileID: 1776537780953198819, guid: 2759280e661d4af4cb4c013670e06656,
+        type: 3}
       propertyPath: SelectionProjector
       value: 
       objectReference: {fileID: 115082, guid: 16a019904df21f94ebadcb47c165a2f8, type: 3}

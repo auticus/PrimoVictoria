@@ -15,9 +15,8 @@ namespace PrimoVictoria.Controllers
     public class GameManager : MonoBehaviour
     {
         public static GameManager instance = null;  //allows us to access the instance of this object from any other script
-        public GameObject SelectionProjector = null; //for things that we control (green)
-        public GameObject OtherSelectionProjector = null;  //for things that we cannot control (red)
-
+        public Projectors Projectors; //collection of all Projectors
+        
         public const string MESH_DECORATOR_TAG = "UnitMeshDecorator";
         public const string SELECT_BUTTON = "Input1"; //the name of the control set in bindings
         public const string EXECUTE_BUTTON = "Input2"; 
@@ -43,7 +42,7 @@ namespace PrimoVictoria.Controllers
                 _selectedUnit = value;
 
                 if (_selectedUnit != null)
-                    _selectedUnit.Select(SelectionProjector);  //todo: if its not a friendly unit we're selecting will need to pass OtherSelectionProjector
+                    _selectedUnit.Select(Projectors, isFriendly: true);  //todo: tell if friend or not and not hardcode it to always be friend
             }
         }
 
@@ -130,7 +129,7 @@ namespace PrimoVictoria.Controllers
             if (e.Button == MouseClickEventArgs.MouseButton.Input1)
             {
                 //left-clicking on a unit will select that unit
-                SelectUnitMeshes(e.GamePieceMesh.UnitID);
+                SelectUnitMeshes(e.UnitID);
             }
             if (e.Button == MouseClickEventArgs.MouseButton.Input2)
             {

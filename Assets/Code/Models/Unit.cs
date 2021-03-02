@@ -14,9 +14,11 @@ namespace PrimoVictoria.Models
     {
         public UnitData Data;
         public int ID;
+        
         private List<Stand> _stands;
         private readonly GameObject _pivotMesh;  //the central figure in the first rank
         private GameObject _parent; //the owning game object
+        private bool _standsVisible;
 
         private const string STANDS_GAMEOBJECT = "Stands";
 
@@ -80,8 +82,7 @@ namespace PrimoVictoria.Models
                 var demoRotation = new Vector3(0, 178, 0);
 
                 stand.StandCapacity = 4;
-                stand.StandVisible = false;
-                stand.InitializeStand(this, Data,  location, demoRotation); 
+                stand.InitializeStand(this, Data,  location, demoRotation, visible: true, modelsVisible: true); 
 
                 _stands.Add(stand);
             }
@@ -91,11 +92,11 @@ namespace PrimoVictoria.Models
         /// Selects the Unit overall, which should highlight all of the stands within it
         /// </summary>
         /// <param name="projectorPrefab"></param>
-        public void Select(GameObject projectorPrefab)
+        public void Select(Projectors projectors, bool isFriendly)
         {
             foreach (var stand in _stands)
             {
-                stand.Select(projectorPrefab);
+                stand.Select(projectors, isFriendly);
             }
         }
 

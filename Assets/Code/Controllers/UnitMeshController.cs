@@ -13,8 +13,7 @@ namespace PrimoVictoria.Controllers
     {
         //https://docs.unity3d.com/Manual/nav-CouplingAnimationAndNavigation.html
         //animator settings etc came from the above 
-
-        public int UnitID; //reference to the master unit
+        public int UnitID;
         public float DefaultAcceleration = 8f;
         public float Deceleration = 60f;
         public float DecelerationDistance = 4f;  //the distance from target to cut deceleration
