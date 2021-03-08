@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using PrimoVictoria.Assets.Code.Models.Parameters;
 using UnityEngine;
 using PrimoVictoria.DataModels;
 using PrimoVictoria.Controllers;
@@ -14,18 +15,14 @@ namespace PrimoVictoria.Models
     {
         public UnitData Data;
         public int ID;
-        
+        public EventHandler<Vector3> OnLocationChanged;
+
         private List<Stand> _stands;
         private readonly GameObject _pivotMesh;  //the central figure in the first rank
-        private GameObject _parent; //the owning game object
+        private GameObject _unit; //the owning game object
         private bool _standsVisible;
 
         private const string STANDS_GAMEOBJECT = "Stands";
-
-        private void Start()
-        {
-            
-        }
 
         public void SetLocation(Vector3 location)
         {
@@ -56,13 +53,10 @@ namespace PrimoVictoria.Models
         /// <summary>
         /// Game Controller method which will set the meshes within the unit
         /// </summary>
-        /// <param name="initialSize"></param>
-        /// <param name="unitLocation"></param>
-        /// <param name="rotation">Euler angles that are then turned into a quaternion</param>
-        public void InitializeUnit(GameObject parent, int unitID, int standCount, Vector3 unitLocation, Vector3 rotation)
+        public void InitializeUnit(UnitInitializationParameters parameters)
         {
-            ID = unitID;
-            _parent = parent;
+            ID = parameters.UnitID;
+            _unit = parameters.ContainingGameObject;
             _stands = new List<Stand>();
 
             var stands = GameObject.Find(STANDS_GAMEOBJECT);
@@ -74,17 +68,19 @@ namespace PrimoVictoria.Models
             }
 
             //initialize the stands in the unit
-            //todo: we shouldn't be hardcoding positions and rotation this is just for demo sake
-            for (int i = 0; i < standCount; i++)
+            for (var i = 0; i < parameters.StandCount; i++)
             {
-                var stand = stands.AddComponent<Stand>();
-                var location = new Vector3(104.81f, 0.02f, 80.736f);
-                var demoRotation = new Vector3(0, 178, 0);
+                var stand = new GameObject($"Stand_{Data.Name}_{i + 1}");
+                var standModel = stand.AddComponent<Stand>();
+                standModel.transform.parent = stands.transform;
 
-                stand.StandCapacity = 4;
-                stand.InitializeStand(this, Data,  location, demoRotation, visible: true, modelsVisible: true); 
+                standModel.StandCapacity = 4;
+                standModel.InitializeStand(this, Data, parameters.UnitLocation, parameters.Rotation,
+                    visible: parameters.StandVisible, modelsVisible: parameters.ModelMeshesVisible);
 
-                _stands.Add(stand);
+                _stands.Add(standModel);
+
+                if (i == 0) RegisterEvents(standModel); //first stand set its event up to track its location
             }
         }
 
@@ -125,6 +121,14 @@ namespace PrimoVictoria.Models
             }
 
             //todo: move the rest of the unit based on a grid
+        }
+
+        private void RegisterEvents(Stand stand)
+        {
+            stand.OnLocationChanged += (sender, standLocation) =>
+            {
+                OnLocationChanged?.Invoke(this, standLocation);
+            };
         }
     }
 }

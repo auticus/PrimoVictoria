@@ -13,17 +13,18 @@ namespace PrimoVictoria.Models
     {
         public Unit ParentUnit;
         public Guid Id;
-        public List<GameObject> ModelMeshes; //the warrior meshes
+        public List<Tuple<GameObject, UnitMeshController>> ModelMeshes; //the warrior meshes and their controller
         public GameObject StandMesh; //the mesh that is the stand that the models are standing on
+        public StandController StandController; //the stand's controller, part of the StandMesh but pulled out on initialization for performance reasons
+
         public int StandCapacity;  //how many models fit on the stand at full capacity
+        
+        public EventHandler<Vector3> OnLocationChanged;
         
         private bool _visible;  //if true will draw the stand that the models are on, if false will not (mostly useful for debugging / dev work)
                                 //note: i'd much rather use properties here and getters and setters but thats not currently the unity way
 
         private bool _modelsVisible;  //if true will draw the model meshes on the stand.  If false, will only draw the stand
-
-        private GameObject _pivotMesh;  //the central figure in the first rank, the model that gets moved first and the others on the stand distance around
-                                        //todo the pivot mesh should become the stand itself not a model on the stand
         private UnitData _unitData; //data pertinent to the unit overall
 
         public void InitializeStand(Unit parent, UnitData data, Vector3 location, Vector3 rotation, bool visible, bool modelsVisible)
@@ -35,7 +36,7 @@ namespace PrimoVictoria.Models
             _modelsVisible = modelsVisible;
 
             if (ModelMeshes == null)
-                ModelMeshes = new List<GameObject>();
+                ModelMeshes = new List<Tuple<GameObject, UnitMeshController>>();
 
             ModelMeshes.Clear();
             
@@ -49,7 +50,7 @@ namespace PrimoVictoria.Models
         /// <returns></returns>
         public Vector3 GetRotation()
         {
-            return _pivotMesh.transform.eulerAngles;
+            return StandMesh.transform.eulerAngles;
         }
 
         public void SetRotation(float rotation)
@@ -61,7 +62,7 @@ namespace PrimoVictoria.Models
 
         public Vector3 GetLocation()
         {
-            return _pivotMesh.transform.position;
+            return StandMesh.transform.position;
         }
 
         public bool GetVisibility()
@@ -93,26 +94,40 @@ namespace PrimoVictoria.Models
         /// <summary>
         /// Moves the individual stand
         /// </summary>
-        /// <param name="pivotMeshPosition">Pivot Mesh Position is the point on the table that the mouse was clicked.
-        /// It is the location that the pivot soldier will land on and the others around him will be spaced as they need</param>
+        /// <param name="destinationPosition">the point on the table that the mouse was clicked.</param>
         /// <param name="isRunning"></param>
-        public void Move(Vector3 pivotMeshPosition, bool isRunning)
+        public void Move(Vector3 destinationPosition, bool isRunning)
         {
-            var pivotController = _pivotMesh.GetComponent<UnitMeshController>();
-
-            if (pivotController == null)
-            {
-                Debug.LogError("Unit Mesh does not have a controller!");
-                return;
-            }
-
-            pivotController.Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
-            pivotController.Destination = pivotMeshPosition;
-
-            //todo: move the rest of the unit based on a grid
+            MoveStand(destinationPosition, isRunning);
+            MoveModelMeshes(destinationPosition, isRunning);
         }
 
         #region Private Methods
+
+        private void Update()
+        {
+            OnLocationChanged?.Invoke(this, StandMesh.transform.position);    
+        }
+
+        private void MoveStand(Vector3 destinationPosition, bool isRunning)
+        {
+            //will be moving the stand, and then the models on the stand.  the models on the stand will have an offset value of the location 
+            StandController.Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
+            StandController.Destination = destinationPosition;
+        }
+
+        private void MoveModelMeshes(Vector3 destinationPosition, bool isRunning)
+        {
+            if (!_modelsVisible) return;
+
+            //todo: move the rest of the unit based on a grid of offsets
+            //right now these will all converge on the point. 
+            foreach (var mesh in ModelMeshes)
+            {
+                mesh.Item2.Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
+                mesh.Item2.Destination = destinationPosition;
+            }
+        }
 
         /// <summary>
         /// Draws selection projector around the entire stand
@@ -136,7 +151,7 @@ namespace PrimoVictoria.Models
             foreach (var mesh in ModelMeshes)
             {
                 var selectionObject = GetSelectionProjector(projectors, isFriendly);
-                selectionObject.transform.SetParent(mesh.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the circle goes
+                selectionObject.transform.SetParent(mesh.Item1.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the circle goes
             }
         }
 
@@ -177,14 +192,15 @@ namespace PrimoVictoria.Models
 
         private void InitializeStandMesh(Unit parent, Vector3 rotation, Vector3 location, bool visible)
         {
-            Debug.Log($"Instantiating stand  location={location} rotation={rotation}");
             StandMesh = Instantiate(original: _unitData.StandMesh, position: location, rotation: Quaternion.Euler(rotation));
 
             StandMesh.transform.SetParent(parent.transform);
             StandMesh.SetActive(visible);
             var standController = StandMesh.AddComponent<StandController>();
-            standController.ParentUnit = parent;
-            standController.StandData = this;
+            
+            StandController = standController;
+            StandController.ParentUnit = parent;
+            StandController.StandData = this;
         }
 
         private void AddModelMeshesToStand(Vector3 location, Vector3 rotation)
@@ -211,11 +227,8 @@ namespace PrimoVictoria.Models
                 }
                 controller.UnitID = ParentUnit.ID;
 
-                ModelMeshes.Add(soldier);
-                if (i == 0) //first item created is the pivot guy
-                {
-                    _pivotMesh = soldier;
-                }
+                var soldierController = soldier.GetComponent<UnitMeshController>();
+                ModelMeshes.Add(new Tuple<GameObject, UnitMeshController>(soldier, soldierController));
 
                 soldier.transform.SetParent(ParentUnit.transform);
                 soldier.SetActive(_modelsVisible);

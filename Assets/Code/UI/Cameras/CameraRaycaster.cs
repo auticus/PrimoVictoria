@@ -30,6 +30,7 @@ namespace PrimoVictoria.UI.Cameras
 
         private Camera view;
         private const int TERRAIN_LAYER = 8;
+        private const string STAND_TAG = "ModelStand"; //stand prefab objects are tagged with this
         
 
         // Start is called before the first frame update
@@ -79,7 +80,7 @@ namespace PrimoVictoria.UI.Cameras
         }
 
         /// <summary>
-        /// Searches for a mesh controller (the 3d model) that is hit and returns it, which should contain unit meta data
+        /// Searches for a mesh controller (the 3d model) that is hit and returns it, which should contain unit meta data and if found raises OnMouseOverGamePiece event
         /// </summary>
         /// <param name="ray"></param>
         /// <returns></returns>
@@ -90,40 +91,58 @@ namespace PrimoVictoria.UI.Cameras
 
             var objectHit = hitInfo.collider.gameObject;
 
-            var selectedUnitID = ProcessUnitID(objectHit);
+            var selectedUnitID = GetUnitID(objectHit);
+            if (selectedUnitID == null) return false;
 
-            if (selectedUnitID != null)
+            Cursor.SetCursor(NoUnit_Friendly, CursorHotspot, CursorMode.Auto);
+            var args = new MouseClickGamePieceEventArgs
             {
-                Cursor.SetCursor(NoUnit_Friendly, CursorHotspot, CursorMode.Auto);
-                MouseClickGamePieceEventArgs args = new MouseClickGamePieceEventArgs() { ScreenPosition = Input.mousePosition, WorldPosition = hitInfo.point, UnitID = selectedUnitID.Value };
+                ScreenPosition = Input.mousePosition,
+                WorldPosition = hitInfo.point,
+                UnitID = selectedUnitID.Value,
+                Button = GetButton()
+            };
 
-                if (Input.GetButtonDown(GameManager.EXECUTE_BUTTON))
-                {
-                    args.Button = MouseClickEventArgs.MouseButton.Input2;
-                }
-
-                if (Input.GetButtonDown(GameManager.SELECT_BUTTON))
-                    args.Button = MouseClickEventArgs.MouseButton.Input1;
-
-                OnMouseOverGamePiece?.Invoke(this, args);
-                return true;
-            }
-            
-            return false;
+            OnMouseOverGamePiece?.Invoke(this, args);
+            return true;
         }
 
-        private int? ProcessUnitID(GameObject objectHit)
+        private MouseClickEventArgs.MouseButton GetButton()
+        {
+            if (Input.GetButtonDown(GameManager.EXECUTE_BUTTON))
+            {
+                return MouseClickEventArgs.MouseButton.Input2;
+            }
+
+            if (Input.GetButtonDown(GameManager.SELECT_BUTTON))
+                return MouseClickEventArgs.MouseButton.Input1;
+
+            return MouseClickEventArgs.MouseButton.None;
+        }
+
+        private int? GetUnitID(GameObject objectHit)
+        {
+            //order is very important here.  A stand uses a specific stand controller, which inherits from a UnitMeshController
+            return objectHit.tag == STAND_TAG ? GetStandsUnitID(objectHit) : GetModelMeshUnitID(objectHit);
+        }
+
+        private int? GetStandsUnitID(GameObject objectHit)
+        {
+            var standHit = objectHit.GetComponent<StandController>();
+            if (standHit != null)
+            {
+                return standHit.ParentUnit.ID;
+            }
+
+            return null;
+        }
+
+        private int? GetModelMeshUnitID(GameObject objectHit)
         {
             var unitHit = objectHit.GetComponent<UnitMeshController>(); //GameObject has to have a UnitMeshController script attached to it
             if (unitHit != null)
             {
                 return unitHit.UnitID;
-            }
-
-            var standHit = objectHit.GetComponent<StandController>();
-            if (standHit != null)
-            {
-                return standHit.ParentUnit.ID;
             }
 
             return null;
