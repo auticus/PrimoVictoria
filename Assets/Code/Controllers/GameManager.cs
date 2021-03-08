@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using PrimoVictoria.Assets.Code.Controllers;
+using PrimoVictoria.Assets.Code.Models.Parameters;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using PrimoVictoria.Models;
@@ -15,9 +17,8 @@ namespace PrimoVictoria.Controllers
     public class GameManager : MonoBehaviour
     {
         public static GameManager instance = null;  //allows us to access the instance of this object from any other script
-        public GameObject SelectionProjector = null; //for things that we control (green)
-        public GameObject OtherSelectionProjector = null;  //for things that we cannot control (red)
-
+        public Projectors Projectors; //collection of all Projectors
+        
         public const string MESH_DECORATOR_TAG = "UnitMeshDecorator";
         public const string SELECT_BUTTON = "Input1"; //the name of the control set in bindings
         public const string EXECUTE_BUTTON = "Input2"; 
@@ -27,23 +28,37 @@ namespace PrimoVictoria.Controllers
         private const string PRELOAD_SCENE = "Preload";
         private const string SANDBOX_SCENE = "Sandbox";
         private const string UNITS_GAMEOBJECT = "Units";
+        private const string PRIMO_UI = "PrimoUI";
+        private UIController _uiController; //the reference to the UIController (for things like the dev console etc)
 
         private Unit _selectedUnit;
         public Unit SelectedUnit
         {
-            get { return _selectedUnit; }
+            get => _selectedUnit;
             set
             {
                 if (_selectedUnit != null && value != null && _selectedUnit.ID == value.ID)
                     return;
 
                 if (_selectedUnit != null)
+                {
                     _selectedUnit.Unselect();
+                    _selectedUnit.OnLocationChanged -= HandleSelectedStandLocation;
+                }
 
                 _selectedUnit = value;
 
                 if (_selectedUnit != null)
-                    _selectedUnit.Select(SelectionProjector);  //todo: if its not a friendly unit we're selecting will need to pass OtherSelectionProjector
+                {
+                    _selectedUnit.Select(Projectors,
+                        isFriendly: true); //todo: tell if friend or not and not hardcode it to always be friend
+
+                    _selectedUnit.OnLocationChanged += HandleSelectedStandLocation;
+                }
+                else
+                {
+                    _uiController.SelectedUnitLocation = Vector3.zero;
+                }
             }
         }
 
@@ -59,6 +74,11 @@ namespace PrimoVictoria.Controllers
 
             InitGame();
         }
+
+        private void Update()
+        {
+            
+        }
     
         private void InitGame()
         {
@@ -72,6 +92,7 @@ namespace PrimoVictoria.Controllers
             }
 
             SubscribeToGameEvents();
+            SetGameObjectReferences();
 
             var unitsCollection = GameObject.Find(UNITS_GAMEOBJECT);
 
@@ -82,11 +103,6 @@ namespace PrimoVictoria.Controllers
             }
 
             LoadUnits(unitsCollection);
-        }
-
-        private void Update()
-        {
-        
         }
 
         private void SubscribeToGameEvents()
@@ -103,6 +119,22 @@ namespace PrimoVictoria.Controllers
             rayCaster.OnMouseClickOverGameBoard += MouseClickOverGameBoard;
         }
 
+        private void SetGameObjectReferences()
+        {
+            var primoUI = GameObject.Find(PRIMO_UI);
+            if (primoUI == null)
+            {
+                Debug.LogWarning("The game requires the PrimoUI GameObject to exist in the scene and it was not found");
+                return;
+            }
+
+            _uiController = primoUI.GetComponentInChildren<UIController>();
+            if (_uiController == null)
+            {
+                Debug.LogWarning("The game requires that the UIController component exist on the PrimoUI GameObject");
+            }
+        }
+
         private void LoadUnits(GameObject unitsCollection)
         {
             //todo: this whole thing is hardcoded and is only for dev purposes, this will need redefined after development to not hardcode the unit types
@@ -110,19 +142,26 @@ namespace PrimoVictoria.Controllers
 
             //IMPORTANT
             //the Game Manager instance in the editor will have had units added to it (which is why there is no code here adding any but we are referencing them)
-            var exampleUnit = unitsCollection.AddComponent<Unit>();
+            
+            var unit = new GameObject("Men At Arms");
+            var exampleUnit = unit.AddComponent<Unit>();
+            unit.transform.parent = unitsCollection.transform;
 
-            var unitSize = new UnitSize
-            {
-                StandCount = 1,
-                UnitType = UnitTypes.Infantry
-            };
-            var location = new Vector3(104.81f, 0.02f, 80.736f);
+            var location = new Vector3(104.81f, 0.1f, 80.736f);
             var rotation = new Vector3(0, 178, 0);
             
-            exampleUnit.Data = Faction_0_Units[0];  //obviously we need to not hardcode this, its for setup testing only
+            exampleUnit.Data = Faction_0_Units[0];  //obviously we need to not hardcode this, its for setup testing only - requires that this element exist on the editor window
             exampleUnit.ID = 1;
-            exampleUnit.InitializeUnit(unitsCollection, 1, unitSize, location, rotation);
+
+            var initializationParameters = new UnitInitializationParameters(unit, 1, 1, location, rotation,
+                standVisible: true, modelMeshesVisible: false);
+
+            exampleUnit.InitializeUnit(initializationParameters);
+        }
+
+        private void HandleSelectedStandLocation(object sender, Vector3 standLocation)
+        {
+            _uiController.SelectedUnitLocation = standLocation;
         }
 
         /// <summary>
@@ -135,7 +174,7 @@ namespace PrimoVictoria.Controllers
             if (e.Button == MouseClickEventArgs.MouseButton.Input1)
             {
                 //left-clicking on a unit will select that unit
-                SelectUnitMeshes(e.GamePieceMesh.UnitID);
+                SelectUnitMeshes(e.UnitID);
             }
             if (e.Button == MouseClickEventArgs.MouseButton.Input2)
             {
@@ -162,7 +201,7 @@ namespace PrimoVictoria.Controllers
             }
             if (e.Button == MouseClickEventArgs.MouseButton.Input2 && SelectedUnit != null)
             {
-                SelectedUnit.MoveUnit(e.WorldPosition, isRunning: false);
+                SelectedUnit.Move(e.WorldPosition, isRunning: false);
             }
         }
 

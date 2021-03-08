@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using PrimoVictoria.Models;
 using PrimoVictoria.Controllers;
+using Debug = UnityEngine.Debug;
 
 namespace PrimoVictoria.UI.Cameras
 {
@@ -16,9 +18,9 @@ namespace PrimoVictoria.UI.Cameras
         [SerializeField] Vector2 CursorHotspot;
 
         #region Cursors
-        [SerializeField] Texture2D NoUnit_Default = null;
-        [SerializeField] Texture2D NoUnit_Friendly = null;
-        [SerializeField] Texture2D NoUnit_Enemy = null;
+        [SerializeField] Texture2D NoUnit_Default = null; //no unit is selected, mouse over no units
+        [SerializeField] Texture2D NoUnit_Friendly = null; //no unit is selected, mouse over friendly 
+        [SerializeField] Texture2D NoUnit_Enemy = null; //no unit is selected, mouse is over an enemy
         [SerializeField] Texture2D Unknown = null;
         #endregion Cursors
 
@@ -28,6 +30,7 @@ namespace PrimoVictoria.UI.Cameras
 
         private Camera view;
         private const int TERRAIN_LAYER = 8;
+        private const string STAND_TAG = "ModelStand"; //stand prefab objects are tagged with this
         
 
         // Start is called before the first frame update
@@ -42,6 +45,7 @@ namespace PrimoVictoria.UI.Cameras
             //if we're over a UI object, the only thing we're sending back is the UI element
             if (EventSystem.current.IsPointerOverGameObject())
             {
+                //we're over a UI element - return out                
                 return;
             }
             else
@@ -76,40 +80,72 @@ namespace PrimoVictoria.UI.Cameras
         }
 
         /// <summary>
-        /// Searches for a mesh controller (the 3d model) that is hit and returns it, which should contain unit meta data
+        /// Searches for a mesh controller (the 3d model) that is hit and returns it, which should contain unit meta data and if found raises OnMouseOverGamePiece event
         /// </summary>
         /// <param name="ray"></param>
         /// <returns></returns>
         private bool RaycastForUnit(Ray ray)
         {
-            RaycastHit hitInfo;
-
-            if (!Physics.Raycast(ray, out hitInfo, DistanceToBackground))
+            if (!Physics.Raycast(ray, out var hitInfo, DistanceToBackground))
                 return false;
 
             var objectHit = hitInfo.collider.gameObject;
 
-            var unitHit = objectHit.GetComponent<UnitMeshController>();
-            if (unitHit != null)
+            var selectedUnitID = GetUnitID(objectHit);
+            if (selectedUnitID == null) return false;
+
+            Cursor.SetCursor(NoUnit_Friendly, CursorHotspot, CursorMode.Auto);
+            var args = new MouseClickGamePieceEventArgs
             {
-                //todo: when implementing selected units and you want to charge, etc, this will matter and you will need to change the cursor more intelligently
-                //for right now every unit we just use the same cursor for
-                Cursor.SetCursor(NoUnit_Friendly, CursorHotspot, CursorMode.Auto);
-                MouseClickGamePieceEventArgs args = new MouseClickGamePieceEventArgs() { ScreenPosition = Input.mousePosition, WorldPosition = hitInfo.point, GamePieceMesh = unitHit };
+                ScreenPosition = Input.mousePosition,
+                WorldPosition = hitInfo.point,
+                UnitID = selectedUnitID.Value,
+                Button = GetButton()
+            };
 
-                if (Input.GetButtonDown(GameManager.EXECUTE_BUTTON))
-                {
-                    args.Button = MouseClickEventArgs.MouseButton.Input2;
-                }
+            OnMouseOverGamePiece?.Invoke(this, args);
+            return true;
+        }
 
-                if (Input.GetButtonDown(GameManager.SELECT_BUTTON))
-                    args.Button = MouseClickEventArgs.MouseButton.Input1;
-
-                OnMouseOverGamePiece?.Invoke(this, args);
-                return true;
+        private MouseClickEventArgs.MouseButton GetButton()
+        {
+            if (Input.GetButtonDown(GameManager.EXECUTE_BUTTON))
+            {
+                return MouseClickEventArgs.MouseButton.Input2;
             }
 
-            return false;
+            if (Input.GetButtonDown(GameManager.SELECT_BUTTON))
+                return MouseClickEventArgs.MouseButton.Input1;
+
+            return MouseClickEventArgs.MouseButton.None;
+        }
+
+        private int? GetUnitID(GameObject objectHit)
+        {
+            //order is very important here.  A stand uses a specific stand controller, which inherits from a UnitMeshController
+            return objectHit.tag == STAND_TAG ? GetStandsUnitID(objectHit) : GetModelMeshUnitID(objectHit);
+        }
+
+        private int? GetStandsUnitID(GameObject objectHit)
+        {
+            var standHit = objectHit.GetComponent<StandController>();
+            if (standHit != null)
+            {
+                return standHit.ParentUnit.ID;
+            }
+
+            return null;
+        }
+
+        private int? GetModelMeshUnitID(GameObject objectHit)
+        {
+            var unitHit = objectHit.GetComponent<UnitMeshController>(); //GameObject has to have a UnitMeshController script attached to it
+            if (unitHit != null)
+            {
+                return unitHit.UnitID;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -120,9 +156,8 @@ namespace PrimoVictoria.UI.Cameras
         private bool RaycastForTerrain(Ray ray)
         {
             //todo: return the terrain piece back, not a vector3.  A vector3 is pointless
-            RaycastHit hitInfo;
             var terrainLayerMask = 1 << TERRAIN_LAYER;
-            var terrainHit = Physics.Raycast(ray, out hitInfo, DistanceToBackground, terrainLayerMask);
+            var terrainHit = Physics.Raycast(ray, out var hitInfo, DistanceToBackground, terrainLayerMask);
             if (terrainHit)
             {
                 //todo: when units are selected etc, this will need more intelligent, right now we just set it to the default cursor

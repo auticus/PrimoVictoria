@@ -15,6 +15,7 @@ MonoBehaviour:
   Name: Men At Arms
   Faction: {fileID: 11400000, guid: 1f090203333acee4ab7860efcecc89c8, type: 2}
   UnitType: 1
+  ModelsPerStand: 4
   Statistics:
     Movement: 5
     Volley: 1
@@ -26,7 +27,11 @@ MonoBehaviour:
     Evasion: 0
   UnitSpecialRules: 
   UnitEquipment: []
-  UnitMesh: {fileID: 1176357143112116, guid: c2cf23cadbe7f9746ba6447ddf138ecc, type: 3}
-  SelectionOrthoSize: 0.7
+  UnitMeshes:
+  - {fileID: 1176357143112116, guid: c2cf23cadbe7f9746ba6447ddf138ecc, type: 3}
+  StandMesh: {fileID: 8532922840266622005, guid: e833ca8b6ae8d4948a1b3c8673e874cd,
+    type: 3}
+  SelectionInfantryOrthoSize: 0.7
+  SelectionInfantryStandOrthoSize: 1.3
   WalkSpeed: 2
   RunSpeed: 5

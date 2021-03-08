@@ -37,8 +37,8 @@ namespace PrimoVictoria
         public MouseButton Button { get; set; }
     }
 
-    public class MouseClickGamePieceEventArgs : MouseClickEventArgs
+    public class MouseClickGamePieceEventArgs : MouseClickEventArgs 
     {
-        public UnitMeshController GamePieceMesh { get; set; }
+        public int UnitID { get; set; }
     }
 }
