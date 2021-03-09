@@ -196,9 +196,8 @@ namespace PrimoVictoria.Models
 
             StandMesh.transform.SetParent(parent.transform);
             StandMesh.SetActive(visible);
-            var standController = StandMesh.AddComponent<StandController>();
-            
-            StandController = standController;
+
+            StandController = StandMesh.GetComponent<StandController>();
             StandController.ParentUnit = parent;
             StandController.StandData = this;
         }

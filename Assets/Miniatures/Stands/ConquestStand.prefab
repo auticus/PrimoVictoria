@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 8532922840266622007}
   - component: {fileID: 8532922840266622006}
   - component: {fileID: -8758532555228612692}
+  - component: {fileID: -7160958838382793843}
   m_Layer: 0
   m_Name: ConquestStand
   m_TagString: ModelStand
@@ -133,3 +134,19 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &-7160958838382793843
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8532922840266622005}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71dd062333ba57743946f4915a827644, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ParentUnit: {fileID: 0}
+  StandData: {fileID: 0}
+  Destination: {x: 0, y: 0, z: 0}
+  Speed: 0
