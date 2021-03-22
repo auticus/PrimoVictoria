@@ -9,7 +9,6 @@ namespace PrimoVictoria.Controllers
     /// Interface between the unit object on the master controller and each of the individual soldier meshes on the battlefielde
     /// This is attached to the character model prefab and requires an Animator and NavMeshAgent component on the prefab
     /// </summary>
-    [RequireComponent(typeof(NavMeshAgent))]
     public class UnitMeshController : MonoBehaviour
     {
         //https://docs.unity3d.com/Manual/nav-CouplingAnimationAndNavigation.html
@@ -36,6 +35,10 @@ namespace PrimoVictoria.Controllers
         protected void Update()
         {
             UpdateAnimator();
+        }
+        private void LateUpdate()
+        {
+            //updating position here because the stand does a lateupdate to adjust its height
             UpdatePosition();
         }
 
@@ -46,12 +49,13 @@ namespace PrimoVictoria.Controllers
         private void OnAnimatorMove()
         {
             //update position based on animation movement using navigation surface height
-            transform.position = Agent.nextPosition;
+            //transform.position = Agent.nextPosition;
         }
 
         private void UpdateAnimator()
         {
             //todo: if not using navmesh agent this will need manual work to set the animations
+            //todo: add mechanism in here to keep track of remaining distance (since not using agent) like a Destination vector you can calculate off of
             if (Animator == null) return;
 
             var shouldMove = Velocity.magnitude > 0.5f && Agent.remainingDistance > 0;
@@ -62,8 +66,8 @@ namespace PrimoVictoria.Controllers
 
         private void UpdatePosition()
         {
-            transform.position = ParentStand.transform.position;
-            //Debug.Log($"Parent position = {ParentStand.transform.position}");
+            transform.rotation = ParentStand.MeshTransform.rotation;
+            transform.position = ParentStand.MeshTransform.position;
         }
     }
 }

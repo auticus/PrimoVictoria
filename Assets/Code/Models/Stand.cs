@@ -50,6 +50,9 @@ namespace PrimoVictoria.Models
             AddMiniaturesToStand(location, rotation);  
         }
 
+        /// <summary>
+        /// The transform of the actual mesh that represents the stand
+        /// </summary>
         public Transform MeshTransform => _mesh.transform;
 
         public bool GetVisibility()
