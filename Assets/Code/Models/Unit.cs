@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using PrimoVictoria.Assets.Code.Models;
 using PrimoVictoria.Assets.Code.Models.Parameters;
 using UnityEngine;
 using PrimoVictoria.DataModels;
@@ -15,14 +16,12 @@ namespace PrimoVictoria.Models
     {
         public UnitData Data;
         public int ID;
-        public EventHandler<Vector3> OnLocationChanged;
+        public EventHandler<StandLocationArgs> OnLocationChanged;
 
         private List<Stand> _stands;
         private readonly GameObject _pivotMesh;  //the central figure in the first rank
         private GameObject _unit; //the owning game object
         private bool _standsVisible;
-
-        private const string STANDS_GAMEOBJECT = "Stands";
 
         public void SetLocation(Vector3 location)
         {
@@ -59,21 +58,14 @@ namespace PrimoVictoria.Models
             _unit = parameters.ContainingGameObject;
             _stands = new List<Stand>();
 
-            var stands = GameObject.Find(STANDS_GAMEOBJECT);
-
-            //add my stands collection if it doesn't already exist
-            if (stands == null)
-            {
-                stands = new GameObject(STANDS_GAMEOBJECT);
-            }
-
             //initialize the stands in the unit
             for (var i = 0; i < parameters.StandCount; i++)
             {
                 var stand = new GameObject($"Stand_{Data.Name}_{i + 1}");
                 var standModel = stand.AddComponent<Stand>();
-                standModel.transform.parent = stands.transform;
-
+                
+                stand.transform.SetParent(this.transform);
+                
                 standModel.StandCapacity = 4;
                 standModel.InitializeStand(this, Data, parameters.UnitLocation, parameters.Rotation,
                     visible: parameters.StandVisible, modelsVisible: parameters.ModelMeshesVisible);
@@ -125,9 +117,9 @@ namespace PrimoVictoria.Models
 
         private void RegisterEvents(Stand stand)
         {
-            stand.OnLocationChanged += (sender, standLocation) =>
+            stand.OnLocationChanged += (sender, args) =>
             {
-                OnLocationChanged?.Invoke(this, standLocation);
+                OnLocationChanged?.Invoke(this, args);
             };
         }
     }

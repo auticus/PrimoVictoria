@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using PrimoVictoria.Assets.Code.Controllers;
+using PrimoVictoria.Assets.Code.Models;
 using PrimoVictoria.Assets.Code.Models.Parameters;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -58,6 +59,7 @@ namespace PrimoVictoria.Controllers
                 else
                 {
                     _uiController.SelectedUnitLocation = Vector3.zero;
+                    _uiController.SelectedUnitSockets = null;
                 }
             }
         }
@@ -154,14 +156,15 @@ namespace PrimoVictoria.Controllers
             exampleUnit.ID = 1;
 
             var initializationParameters = new UnitInitializationParameters(unit, 1, 1, location, rotation,
-                standVisible: true, modelMeshesVisible: false);
+                standVisible: true, modelMeshesVisible: true);
 
             exampleUnit.InitializeUnit(initializationParameters);
         }
 
-        private void HandleSelectedStandLocation(object sender, Vector3 standLocation)
+        private void HandleSelectedStandLocation(object sender, StandLocationArgs e)
         {
-            _uiController.SelectedUnitLocation = standLocation;
+            _uiController.SelectedUnitLocation = e.StandLocation;
+            _uiController.SelectedUnitSockets = e.StandSocketLocations;
         }
 
         /// <summary>

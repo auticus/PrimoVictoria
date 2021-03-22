@@ -1,7 +1,4 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using PrimoVictoria.Controllers;
-using PrimoVictoria.Models;
+﻿using PrimoVictoria.Models;
 using UnityEngine;
 
 /// <summary>
@@ -10,29 +7,36 @@ using UnityEngine;
 public class StandController : MonoBehaviour
 {
     public Unit ParentUnit;
-    public Stand StandData;
+    public Stand Stand;
     public Vector3 Destination;
     public float Speed;
 
+    private void Start()
+    {
+        
+    }
+
     private void Update()
     {
-        //code put here as an example of moving the stand without the help of a navmesh agent
-        if (Vector3.Distance(transform.position, Destination) < 0.001f) return;
+        var currentPos = Stand.MeshTransform.position;
+        var currentRot = Stand.MeshTransform.rotation;
+        if (Vector3.Distance(currentPos, Destination) < 0.001f) return;
 
         var step = Speed * Time.deltaTime; //calculate the distance to move
-        var direction = (Destination - transform.position).normalized;
+        var direction = (Destination - currentPos).normalized;
         var lookRotation = Quaternion.LookRotation(direction);
 
-        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * Speed);
-        transform.position = Vector3.MoveTowards(transform.position, Destination, step);
+        Stand.MeshTransform.rotation = Quaternion.Slerp(currentRot, lookRotation, Time.deltaTime * Speed);
+        Stand.MeshTransform.position = Vector3.MoveTowards(currentPos, Destination, step);
     }
 
     private void LateUpdate()
     {
         //sample the height where we are and bump us up so we aren't clipping through the terrain
-        var pos = transform.position;
+        //removing this also makes the stand mesh do weird things when moving like ramp up and be dramatic when moving over bumps on the terrain
+        var pos = Stand.MeshTransform.position;
         pos.y = GetHighestYCoordinate();
-        transform.position = pos; //PROBLEM - this is still not raising the piece up - and the Y is listed as higher than the terrain but the terrain is still clipping through
+        Stand.MeshTransform.position = pos; //PROBLEM - this is still not raising the piece up - and the Y is listed as higher than the terrain but the terrain is still clipping through
     }
 
     /// <summary>
@@ -44,15 +48,15 @@ public class StandController : MonoBehaviour
         //note that if the scale is "2" then that means 1 unit in any direction past center is the edge (divide by two)
         //0,0 is the center.  so some values will be negative and some positive around that
 
-        var xScale = transform.localScale.x;
-        var zScale = transform.localScale.z;
-        var x = transform.localPosition.x + (xScale / 2);
-        var y = transform.localPosition.y;
-        var z = transform.localPosition.z + (zScale / 2);
+        var xScale = Stand.MeshTransform.transform.localScale.x;
+        var zScale = Stand.MeshTransform.transform.localScale.z;
+        var x = Stand.MeshTransform.transform.position.x + (xScale / 2);
+        var y = Stand.MeshTransform.transform.position.y;
+        var z = Stand.MeshTransform.transform.position.z + (zScale / 2);
 
         var points = new Vector3[]
         {
-            new Vector3(transform.localPosition.x,transform.localPosition.y, transform.localPosition.z),
+            new Vector3(Stand.MeshTransform.transform.position.x,Stand.MeshTransform.transform.position.y, Stand.MeshTransform.transform.position.z),
             new Vector3(x,y,z),
             new Vector3(-x, y, -z),
             new Vector3(-x, y, z),
@@ -68,5 +72,4 @@ public class StandController : MonoBehaviour
 
         return highestY;
     }
-
 }

@@ -1,8 +1,12 @@
 ﻿using System.Collections.Generic;
 using System;
+using System.Linq;
+using PrimoVictoria.Assets.Code.Models;
+using PrimoVictoria.Assets.Code.Models.Utilities;
 using UnityEngine;
 using PrimoVictoria.Controllers;
 using PrimoVictoria.DataModels;
+using Unity.UNetWeaver;
 
 namespace PrimoVictoria.Models
 {
@@ -13,19 +17,20 @@ namespace PrimoVictoria.Models
     {
         public Unit ParentUnit;
         public Guid Id;
-        public List<Tuple<GameObject, UnitMeshController>> ModelMeshes; //the warrior meshes and their controller
-        public GameObject StandMesh; //the mesh that is the stand that the models are standing on
+        public List<Miniature> Miniatures; //the warrior meshes and their controller
         public StandController StandController; //the stand's controller, part of the StandMesh but pulled out on initialization for performance reasons
 
         public int StandCapacity;  //how many models fit on the stand at full capacity
         
-        public EventHandler<Vector3> OnLocationChanged;
-        
+        public EventHandler<StandLocationArgs> OnLocationChanged;
+
+        private GameObject _mesh; //the mesh that is the stand that the models are standing on
         private bool _visible;  //if true will draw the stand that the models are on, if false will not (mostly useful for debugging / dev work)
                                 //note: i'd much rather use properties here and getters and setters but thats not currently the unity way
 
         private bool _modelsVisible;  //if true will draw the model meshes on the stand.  If false, will only draw the stand
         private UnitData _unitData; //data pertinent to the unit overall
+        private List<StandSocket> _modelSockets;
 
         public void InitializeStand(Unit parent, UnitData data, Vector3 location, Vector3 rotation, bool visible, bool modelsVisible)
         {
@@ -35,35 +40,17 @@ namespace PrimoVictoria.Models
             _visible = visible;
             _modelsVisible = modelsVisible;
 
-            if (ModelMeshes == null)
-                ModelMeshes = new List<Tuple<GameObject, UnitMeshController>>();
+            if (Miniatures == null)
+                Miniatures = new List<Miniature>();
 
-            ModelMeshes.Clear();
+            Miniatures.Clear();
             
             InitializeStandMesh(parent, rotation, location, visible);
-            AddModelMeshesToStand(location, rotation);  
+            CreateStandSockets();
+            AddMiniaturesToStand(location, rotation);  
         }
 
-        /// <summary>
-        /// The rotation of the object in Euler angles
-        /// </summary>
-        /// <returns></returns>
-        public Vector3 GetRotation()
-        {
-            return StandMesh.transform.eulerAngles;
-        }
-
-        public void SetRotation(float rotation)
-        {
-            //setting rotation:  https://docs.unity3d.com/ScriptReference/Transform-eulerAngles.html or https://docs.unity3d.com/ScriptReference/Quaternion-operator_multiply.html
-            //setting the Y in the euler, x & z should stay 0
-            throw new NotImplementedException("This feature has not been implemented yet Tokies");
-        }
-
-        public Vector3 GetLocation()
-        {
-            return StandMesh.transform.position;
-        }
+        public Transform MeshTransform => _mesh.transform;
 
         public bool GetVisibility()
         {
@@ -99,14 +86,14 @@ namespace PrimoVictoria.Models
         public void Move(Vector3 destinationPosition, bool isRunning)
         {
             MoveStand(destinationPosition, isRunning);
-            MoveModelMeshes(destinationPosition, isRunning);
         }
 
         #region Private Methods
 
         private void Update()
         {
-            OnLocationChanged?.Invoke(this, StandMesh.transform.position);    
+            var args = new StandLocationArgs(_mesh.transform.position, _modelSockets.Select(socket=>socket.StandPosition).ToArray());
+            OnLocationChanged?.Invoke(this, args);   
         }
 
         private void MoveStand(Vector3 destinationPosition, bool isRunning)
@@ -114,19 +101,6 @@ namespace PrimoVictoria.Models
             //will be moving the stand, and then the models on the stand.  the models on the stand will have an offset value of the location 
             StandController.Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
             StandController.Destination = destinationPosition;
-        }
-
-        private void MoveModelMeshes(Vector3 destinationPosition, bool isRunning)
-        {
-            if (!_modelsVisible) return;
-
-            //todo: move the rest of the unit based on a grid of offsets
-            //right now these will all converge on the point. 
-            foreach (var mesh in ModelMeshes)
-            {
-                mesh.Item2.Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
-                mesh.Item2.Destination = destinationPosition;
-            }
         }
 
         /// <summary>
@@ -137,7 +111,7 @@ namespace PrimoVictoria.Models
         private void SelectStand(Projectors projectors, bool isFriendly)
         {
             var selectionObject = GetSelectionProjector(projectors, isFriendly);
-            selectionObject.transform.SetParent(StandMesh.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the projector goes
+            selectionObject.transform.SetParent(_mesh.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the projector goes
         }
 
         /// <summary>
@@ -148,10 +122,10 @@ namespace PrimoVictoria.Models
         private void SelectModelMeshes(Projectors projectors, bool isFriendly)
         {
             //draw the projector prefab (the circle under the models) under the models
-            foreach (var mesh in ModelMeshes)
+            foreach (var mini in Miniatures)
             {
                 var selectionObject = GetSelectionProjector(projectors, isFriendly);
-                selectionObject.transform.SetParent(mesh.Item1.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the circle goes
+                selectionObject.transform.SetParent(mini.MiniatureMesh.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the circle goes
             }
         }
 
@@ -192,46 +166,59 @@ namespace PrimoVictoria.Models
 
         private void InitializeStandMesh(Unit parent, Vector3 rotation, Vector3 location, bool visible)
         {
-            StandMesh = Instantiate(original: _unitData.StandMesh, position: location, rotation: Quaternion.Euler(rotation));
+            _mesh = Instantiate(original: _unitData.StandMesh, position: location, rotation: Quaternion.Euler(rotation));
 
-            StandMesh.transform.SetParent(parent.transform);
-            StandMesh.SetActive(visible);
+            _mesh.transform.SetParent(parent.transform);
+            _mesh.SetActive(visible);
 
-            StandController = StandMesh.GetComponent<StandController>();
+            StandController = _mesh.GetComponent<StandController>();
             StandController.ParentUnit = parent;
-            StandController.StandData = this;
+            StandController.Stand = this;
         }
 
-        private void AddModelMeshesToStand(Vector3 location, Vector3 rotation)
+        private void CreateStandSockets()
+        {
+            _modelSockets = StandSocketFactory.CreateStandSocketsForStand(_mesh, ParentUnit.Data);
+
+            if (_modelSockets == null) Debug.LogWarning($"Stand for unit {_unitData.Name} failed to create modelSockets");
+        }
+
+        private void AddMiniaturesToStand(Vector3 location, Vector3 rotation)
         {
             var modelCount = 1;
-            for (int i = 0; i < modelCount; i++)
+            for (var i = 0; i < modelCount; i++)
             {
                 //todo: first guy in will likely be a standard bearer mesh of some kind so not everything will just use the UnitMesh object here
                 //this will likely take the form of an enum or something explaining each element in the UnitMeshes list and what it really is
-                var soldier = Instantiate(original: _unitData.UnitMeshes[0], position: location, rotation: Quaternion.Euler(rotation));
-
-                if (soldier == null)
-                {
-                    Debug.Log("Stand::InitializeStand - Model Mesh is null after instantiation");
-                    continue;
-                }
-
-                var controller = soldier.GetComponent<UnitMeshController>();
-
-                if (controller == null)
-                {
-                    Debug.LogWarning("Stand::InitializeStand - mesh controller was not found on the mesh");
-                    continue;
-                }
-                controller.UnitID = ParentUnit.ID;
-
-                var soldierController = soldier.GetComponent<UnitMeshController>();
-                ModelMeshes.Add(new Tuple<GameObject, UnitMeshController>(soldier, soldierController));
-
-                soldier.transform.SetParent(ParentUnit.transform);
-                soldier.SetActive(_modelsVisible);
+                var miniatureMesh = Instantiate(original: _unitData.UnitMeshes[0], position: location, rotation: Quaternion.Euler(rotation));
+                SetMiniature(miniatureMesh);
             }
+        }
+
+        private void AssignEmptySocket(Miniature mini)
+        {
+            var socket = _modelSockets.FirstOrDefault(p => p.ModelMesh == null);
+            if (socket == null) return;
+            mini.Socket = socket;
+        }
+
+        private void SetMiniature(GameObject miniatureMesh)
+        {
+            var miniController = miniatureMesh.GetComponent<UnitMeshController>();
+            var mini = new Miniature(miniatureMesh, miniController, this);
+            Miniatures.Add(mini);
+            AssignEmptySocket(mini);
+
+            if (mini.Socket == null)
+            {
+                Debug.LogWarning("Mini has no empty stand socket to be placed in!");
+                return;
+            }
+
+            miniController.ParentStand = this;
+            miniController.Socket = mini.Socket;
+            miniatureMesh.transform.SetParent(ParentUnit.transform, worldPositionStays: false);
+            miniatureMesh.SetActive(_modelsVisible);
         }
 
         #endregion Private Methods

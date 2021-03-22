@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Runtime.InteropServices.WindowsRuntime;
+using PrimoVictoria.Models;
+using UnityEngine;
 using UnityEngine.AI;
 
 namespace PrimoVictoria.Controllers
@@ -12,44 +14,15 @@ namespace PrimoVictoria.Controllers
     {
         //https://docs.unity3d.com/Manual/nav-CouplingAnimationAndNavigation.html
         //animator settings etc came from the above 
-        public int UnitID;
-        public float DefaultAcceleration = 8f;
-        public float Deceleration = 60f;
-        public float DecelerationDistance = 4f;  //the distance from target to cut deceleration
+        public int UnitID => ParentStand.ParentUnit.ID;
 
-        protected NavMeshAgent Agent;
-        protected Animator Animator;
-        protected Vector2 SmoothDeltaPosition = Vector2.zero;
-        protected Vector2 Velocity = Vector2.zero;
+        public StandSocket Socket; //socket on the stand that this should stand on
+        public Stand ParentStand; //the overall stand that this miniature belongs to
 
-        protected Vector3 _destination;
-        public Vector3 Destination
-        {
-            get { return _destination; }
-            set
-            {
-                if (_destination != value)
-                {
-                    _destination = value;
-                    Agent.destination = _destination;
-                }
-            }
-        }
-
-        /// <summary>
-        /// The nav agent speed
-        /// </summary>
-        public float Speed
-        {
-            get
-            {
-                return Agent.speed;
-            }
-            set
-            {
-                Agent.speed = value;
-            }
-        }
+        private NavMeshAgent Agent;
+        private Animator Animator;
+        private Vector2 SmoothDeltaPosition = Vector2.zero;
+        private Vector2 Velocity = Vector2.zero;
 
         // Start is called before the first frame update
         protected void Start()
@@ -62,23 +35,8 @@ namespace PrimoVictoria.Controllers
 
         protected void Update()
         {
-            var worldDeltaPosition = Agent.nextPosition - transform.position;
-
-            //map the worldDeltaPosition into local space
-            //dot product is a float value equal to the magnitude (length) of the two vectors multiplied together and then multiplied by COS of the angle between them
-            //for normalized vector, DOT returns 1 if they point in same direction, -1 if they point in opposite directions, and zero if they are perpendicular
-            var dx = Vector3.Dot(transform.right, worldDeltaPosition);
-            var dy = Vector3.Dot(transform.forward, worldDeltaPosition);
-            var deltaPosition = new Vector2(dx, dy);
-
-            var smooth = Mathf.Min(1.0f, Time.deltaTime / 0.15f);
-            SmoothDeltaPosition = Vector2.Lerp(SmoothDeltaPosition, deltaPosition, smooth);
-
-            //update velocity if time advances
-            if (Time.deltaTime > 1e-5f)
-                Velocity = SmoothDeltaPosition / Time.deltaTime; //not currently used, did not use the velocity tags as we don't have a blend tree to use
-
             UpdateAnimator();
+            UpdatePosition();
         }
 
         /// <summary>
@@ -93,12 +51,19 @@ namespace PrimoVictoria.Controllers
 
         private void UpdateAnimator()
         {
+            //todo: if not using navmesh agent this will need manual work to set the animations
             if (Animator == null) return;
 
             var shouldMove = Velocity.magnitude > 0.5f && Agent.remainingDistance > 0;
 
             //update animation parameters
             Animator.SetBool("Move", shouldMove);
+        }
+
+        private void UpdatePosition()
+        {
+            transform.position = ParentStand.transform.position;
+            //Debug.Log($"Parent position = {ParentStand.transform.position}");
         }
     }
 }
