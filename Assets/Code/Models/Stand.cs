@@ -21,7 +21,7 @@ namespace PrimoVictoria.Models
         public StandController StandController; //the stand's controller, part of the StandMesh but pulled out on initialization for performance reasons
 
         public int StandCapacity;  //how many models fit on the stand at full capacity
-        
+
         public EventHandler<StandLocationArgs> OnLocationChanged;
 
         private GameObject _mesh; //the mesh that is the stand that the models are standing on
@@ -44,10 +44,10 @@ namespace PrimoVictoria.Models
                 Miniatures = new List<Miniature>();
 
             Miniatures.Clear();
-            
+
             InitializeStandMesh(parent, rotation, location, visible);
             CreateStandSockets();
-            AddMiniaturesToStand(location, rotation);  
+            AddMiniaturesToStand(location, rotation);
         }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace PrimoVictoria.Models
 
         public void Select(Projectors projectors, bool isFriendly)
         {
-            if (_visible) SelectStand(projectors, isFriendly); 
+            if (_visible) SelectStand(projectors, isFriendly);
             else SelectModelMeshes(projectors, isFriendly);
         }
 
@@ -102,8 +102,8 @@ namespace PrimoVictoria.Models
 
         private void Update()
         {
-            var args = new StandLocationArgs(_mesh.transform.position, _modelSockets.Select(socket=>socket.StandPosition).ToArray());
-            OnLocationChanged?.Invoke(this, args);   
+            var args = new StandLocationArgs(_mesh.transform.position, _modelSockets.Select(socket => socket.StandPosition).ToArray());
+            OnLocationChanged?.Invoke(this, args);
         }
 
         private void MoveStand(Vector3 destinationPosition, bool isRunning)
@@ -159,7 +159,7 @@ namespace PrimoVictoria.Models
                 return (float)_unitData.SelectionInfantryStandOrthoSize;
             if (!_visible && _unitData.UnitType == UnitTypes.Infantry)
                 return (float)_unitData.SelectionInfantryOrthoSize;
-            
+
             Debug.LogError($"Stand::GetProjectorOrthoSize encountered a unit type that is not currently supported - {_unitData.UnitType}");
             throw new ArgumentException($"Encountered Unit Type is not supported - {_unitData.UnitType}");
         }
@@ -195,21 +195,13 @@ namespace PrimoVictoria.Models
 
         private void AddMiniaturesToStand(Vector3 location, Vector3 rotation)
         {
-            var modelCount = 1;
-            for (var i = 0; i < modelCount; i++)
+            for (var i = 0; i < ParentUnit.Data.ModelsPerStand; i++)
             {
                 //todo: first guy in will likely be a standard bearer mesh of some kind so not everything will just use the UnitMesh object here
                 //this will likely take the form of an enum or something explaining each element in the UnitMeshes list and what it really is
                 var miniatureMesh = Instantiate(original: _unitData.UnitMeshes[0], position: location, rotation: Quaternion.Euler(rotation));
                 SetMiniature(miniatureMesh);
             }
-        }
-
-        private void AssignEmptySocket(Miniature mini)
-        {
-            var socket = _modelSockets.FirstOrDefault(p => p.ModelMesh == null);
-            if (socket == null) return;
-            mini.Socket = socket;
         }
 
         private void SetMiniature(GameObject miniatureMesh)
@@ -229,6 +221,14 @@ namespace PrimoVictoria.Models
             miniController.Socket = mini.Socket;
             miniatureMesh.transform.SetParent(ParentUnit.transform, worldPositionStays: false);
             miniatureMesh.SetActive(_modelsVisible);
+        }
+
+        private void AssignEmptySocket(Miniature mini)
+        {
+            var socket = _modelSockets.FirstOrDefault(p => p.Occupied == false);
+            if (socket == null) return;
+            mini.Socket = socket;
+            socket.Occupied = true;
         }
 
         #endregion Private Methods

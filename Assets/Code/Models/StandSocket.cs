@@ -6,5 +6,5 @@
 public class StandSocket
 {
     public Vector3 StandPosition;
-    public GameObject ModelMesh;
+    public bool Occupied;
 }
