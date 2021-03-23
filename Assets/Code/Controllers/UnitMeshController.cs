@@ -23,6 +23,8 @@ namespace PrimoVictoria.Controllers
         private Vector2 SmoothDeltaPosition = Vector2.zero;
         private Vector2 Velocity = Vector2.zero;
 
+        private float _movementThreshold = 0.5f; //when distance remaining <= this, stop moving
+
         // Start is called before the first frame update
         protected void Start()
         {
@@ -59,10 +61,10 @@ namespace PrimoVictoria.Controllers
             //todo: add mechanism in here to keep track of remaining distance (since not using agent) like a Destination vector you can calculate off of
             if (Animator == null) return;
 
-            var shouldMove = Velocity.magnitude > 0.5f && Agent.remainingDistance > 0;
-
+            //var shouldMove = Velocity.magnitude > 0.5f && Agent.remainingDistance > 0;
+            
             //update animation parameters
-            Animator.SetBool("Move", shouldMove);
+            Animator.SetBool("Move", ShouldMove());
         }
 
         private void UpdatePosition()
@@ -71,6 +73,11 @@ namespace PrimoVictoria.Controllers
             //Debug.Log($"Socket Local={Socket.StandPosition} :: Socket World={ParentStand.MeshTransform.transform.TransformPoint(Socket.StandPosition)} :: Stand World={ParentStand.MeshTransform.position}");
             transform.rotation = ParentStand.MeshTransform.rotation;
             transform.position = ParentStand.MeshTransform.transform.TransformPoint(Socket.StandPosition); //weird offset of the model
+        }
+
+        private bool ShouldMove()
+        {
+            return ParentStand.Destination != Vector3.zero && ParentStand.MoveDistance > _movementThreshold;
         }
     }
 }

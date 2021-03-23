@@ -55,6 +55,13 @@ namespace PrimoVictoria.Models
         /// </summary>
         public Transform MeshTransform => _mesh.transform;
 
+        /// <summary>
+        /// The distance between the Stand's current location and its final destination
+        /// </summary>
+        public float MoveDistance => Vector3.Distance(StandController.Destination, _mesh.transform.position);
+
+        public Vector3 Destination => StandController.Destination;
+
         public bool GetVisibility()
         {
             return _visible;
