@@ -38,7 +38,8 @@ namespace PrimoVictoria.Controllers
         }
         private void LateUpdate()
         {
-            //updating position here because the stand does a lateupdate to adjust its height
+            //updating position here because the stand does a lateupdate to adjust its height and if you update the position in update,
+            //the meshes may pop like popcorn up in the air while moving
             UpdatePosition();
         }
 
@@ -66,8 +67,10 @@ namespace PrimoVictoria.Controllers
 
         private void UpdatePosition()
         {
+            //Socket location is the local location so use transform.TransformPoint to convert from its local position to a world position
+            //Debug.Log($"Socket Local={Socket.StandPosition} :: Socket World={ParentStand.MeshTransform.transform.TransformPoint(Socket.StandPosition)} :: Stand World={ParentStand.MeshTransform.position}");
             transform.rotation = ParentStand.MeshTransform.rotation;
-            transform.position = ParentStand.MeshTransform.position;
+            transform.position = ParentStand.MeshTransform.transform.TransformPoint(Socket.StandPosition); //weird offset of the model
         }
     }
 }

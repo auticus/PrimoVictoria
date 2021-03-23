@@ -172,7 +172,7 @@ namespace PrimoVictoria.Models
             _mesh = Instantiate(original: _unitData.StandMesh, position: location, rotation: Quaternion.Euler(rotation));
 
             _mesh.transform.SetParent(parent.transform);
-            _mesh.SetActive(visible);
+            _mesh.GetComponent<MeshRenderer>().enabled = visible;
 
             StandController = _mesh.GetComponent<StandController>();
             StandController.ParentUnit = parent;

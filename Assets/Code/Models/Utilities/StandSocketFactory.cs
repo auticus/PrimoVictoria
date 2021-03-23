@@ -36,10 +36,10 @@ namespace PrimoVictoria.Assets.Code.Models.Utilities
         {
             return new List<StandSocket>()
             {
-                new StandSocket() {StandPosition = new Vector3(0.625f, 0.625f)},
-                new StandSocket() {StandPosition = new Vector3(1.875f, 0.625f)},
-                new StandSocket() {StandPosition = new Vector3(0.625f, 1.875f)},
-                new StandSocket() {StandPosition = new Vector3(1.875f, 1.875f)}
+                new StandSocket() {StandPosition = new Vector3(0.18f,0,0.18f)}, 
+                new StandSocket() {StandPosition = new Vector3(1.875f, 0.0f, 0.625f)}, //not verified
+                new StandSocket() {StandPosition = new Vector3(0.625f, 0.0f, 1.875f)}, //not verified
+                new StandSocket() {StandPosition = new Vector3(1.875f, 0.0f, 1.875f)} //not verified
             };
         }
 
