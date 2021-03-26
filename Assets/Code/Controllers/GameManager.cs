@@ -59,7 +59,6 @@ namespace PrimoVictoria.Controllers
                 else
                 {
                     _uiController.SelectedUnitLocation = Vector3.zero;
-                    _uiController.SelectedUnitSockets = null;
                 }
             }
         }
@@ -150,12 +149,12 @@ namespace PrimoVictoria.Controllers
             unit.transform.parent = unitsCollection.transform;
 
             var location = new Vector3(104.81f, 0.1f, 80.736f);
-            var rotation = new Vector3(0, 178, 0);
+            var rotation = new Vector3(0, 45, 0);
             
             exampleUnit.Data = Faction_0_Units[0];  //obviously we need to not hardcode this, its for setup testing only - requires that this element exist on the editor window
             exampleUnit.ID = 1;
 
-            var initializationParameters = new UnitInitializationParameters(unit, 1, 1, location, rotation,
+            var initializationParameters = new UnitInitializationParameters(unit, unitID:1, standCount:1, horizontalStandCount:1, location, rotation,
                 standVisible: true, modelMeshesVisible: true);
 
             exampleUnit.InitializeUnit(initializationParameters);
@@ -164,7 +163,6 @@ namespace PrimoVictoria.Controllers
         private void HandleSelectedStandLocation(object sender, StandLocationArgs e)
         {
             _uiController.SelectedUnitLocation = e.StandLocation;
-            _uiController.SelectedUnitSockets = e.StandSocketLocations;
         }
 
         /// <summary>
@@ -206,6 +204,8 @@ namespace PrimoVictoria.Controllers
             {
                 SelectedUnit.Move(e.WorldPosition, isRunning: false);
             }
+
+            _uiController.CurrentMousePosition = e.WorldPosition;
         }
 
         private void SelectUnitMeshes(int unitID)

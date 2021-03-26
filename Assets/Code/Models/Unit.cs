@@ -19,7 +19,8 @@ namespace PrimoVictoria.Models
         public EventHandler<StandLocationArgs> OnLocationChanged;
 
         private List<Stand> _stands;
-        private readonly GameObject _pivotMesh;  //the central figure in the first rank
+        private Transform _pivotStandMeshTransform;  //the central stand in the first rank
+        private Vector3 _pivotStandMeshScale; //how big the stand is
         private GameObject _unit; //the owning game object
         private bool _standsVisible;
 
@@ -28,19 +29,24 @@ namespace PrimoVictoria.Models
             throw new NotImplementedException("This feature has not been implemented yet Tokies");
         }
 
-        public Vector3 GetLocation()
-        {
-            return _pivotMesh.transform.position;
-        }
-
+        public Transform GetPivotMeshTransform() => _pivotStandMeshTransform;
         /// <summary>
-        /// The rotation of the object in Euler angles
+        /// The location of the unit based on the position of its Pivot Stand
         /// </summary>
         /// <returns></returns>
-        public Vector3 GetRotation()
-        {
-            return _pivotMesh.transform.eulerAngles;
-        }
+        public Vector3 GetLocation() => _pivotStandMeshTransform.position;
+
+        /// <summary>
+        /// The rotation of the unit in Euler angles based on the rotation of its Pivot Stand
+        /// </summary>
+        /// <returns></returns>
+        public Vector3 GetRotationVector() => _pivotStandMeshTransform.eulerAngles;
+
+        /// <summary>
+        /// The rotation of the unit based on its Pivot Stand
+        /// </summary>
+        /// <returns></returns>
+        public Quaternion GetRotation() => _pivotStandMeshTransform.rotation;
 
         public void SetRotation(float rotation)
         {
@@ -59,20 +65,37 @@ namespace PrimoVictoria.Models
             _stands = new List<Stand>();
 
             //initialize the stands in the unit
+            var file = 0; //a  file in this sense is the column count of the model in the regiment... ie rank and FILE
+            var row = 1;
+
+            //the first stand coming in is located at UnitLocation.  The stands around it will fan out around it
             for (var i = 0; i < parameters.StandCount; i++)
             {
+                file++;
+                if (file > parameters.HorizontalStandCount)
+                {
+                    file = 1;
+                    row++;
+                }
+
                 var stand = new GameObject($"Stand_{Data.Name}_{i + 1}");
                 var standModel = stand.AddComponent<Stand>();
                 
                 stand.transform.SetParent(this.transform);
                 
-                standModel.StandCapacity = 4;
-                standModel.InitializeStand(this, Data, parameters.UnitLocation, parameters.Rotation,
-                    visible: parameters.StandVisible, modelsVisible: parameters.ModelMeshesVisible);
+                standModel.StandCapacity = 4; //todo: this is locked into conquest and needs to not be hardcoded magic number
+
+                standModel.InitializeStand(new StandInitializationParameters(this, Data, parameters.UnitLocation, parameters.Rotation,
+                    fileIndex: file, rowIndex: row, parameters.StandVisible, parameters.ModelMeshesVisible));
 
                 _stands.Add(standModel);
 
-                if (i == 0) RegisterEvents(standModel); //first stand set its event up to track its location
+                if (i == 0)
+                {
+                    RegisterEvents(standModel); //first stand set its event up to track its location
+                    _pivotStandMeshTransform = standModel.MeshTransform;
+                    _pivotStandMeshScale = standModel.MeshScale;
+                }
             }
         }
 

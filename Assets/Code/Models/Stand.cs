@@ -1,12 +1,15 @@
 ﻿using System.Collections.Generic;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using PrimoVictoria.Assets.Code.Models;
+using PrimoVictoria.Assets.Code.Models.Parameters;
 using PrimoVictoria.Assets.Code.Models.Utilities;
 using UnityEngine;
 using PrimoVictoria.Controllers;
 using PrimoVictoria.DataModels;
 using Unity.UNetWeaver;
+using Debug = UnityEngine.Debug;
 
 namespace PrimoVictoria.Models
 {
@@ -21,6 +24,21 @@ namespace PrimoVictoria.Models
         public StandController StandController; //the stand's controller, part of the StandMesh but pulled out on initialization for performance reasons
 
         public int StandCapacity;  //how many models fit on the stand at full capacity
+        
+        /// <summary>
+        /// What position in the unit footprint does this occupy (refer to unit documentation)
+        /// </summary>
+        public int FileIndex;
+
+        /// <summary>
+        /// What row in the unit does this occupy (refer to unit documentation)
+        /// </summary>
+        public int RowIndex;
+
+        /// <summary>
+        /// Based off of its location in the unit, the offset from the location passed that the stand actually occupies
+        /// </summary>
+        public Vector3 UnitOffset;
 
         public EventHandler<StandLocationArgs> OnLocationChanged;
 
@@ -32,28 +50,15 @@ namespace PrimoVictoria.Models
         private UnitData _unitData; //data pertinent to the unit overall
         private List<StandSocket> _modelSockets;
 
-        public void InitializeStand(Unit parent, UnitData data, Vector3 location, Vector3 rotation, bool visible, bool modelsVisible)
-        {
-            Id = Guid.NewGuid();
-            ParentUnit = parent;
-            _unitData = data;
-            _visible = visible;
-            _modelsVisible = modelsVisible;
-
-            if (Miniatures == null)
-                Miniatures = new List<Miniature>();
-
-            Miniatures.Clear();
-
-            InitializeStandMesh(parent, rotation, location, visible);
-            CreateStandSockets();
-            AddMiniaturesToStand(location, rotation);
-        }
-
         /// <summary>
         /// The transform of the actual mesh that represents the stand
         /// </summary>
         public Transform MeshTransform => _mesh.transform;
+
+        /// <summary>
+        /// The size of the object's dimensions
+        /// </summary>
+        public Vector3 MeshScale => _mesh.transform.localScale;
 
         /// <summary>
         /// The distance between the Stand's current location and its final destination
@@ -61,6 +66,28 @@ namespace PrimoVictoria.Models
         public float MoveDistance => Vector3.Distance(StandController.Destination, _mesh.transform.position);
 
         public Vector3 Destination => StandController.Destination;
+
+        public void InitializeStand(StandInitializationParameters parms)
+        {
+            Id = Guid.NewGuid();
+            ParentUnit = parms.Parent;
+            _unitData = parms.Data;
+            _visible = parms.StandVisible;
+            _modelsVisible = parms.ModelMeshesVisible;
+            FileIndex = parms.FileIndex;
+            RowIndex = parms.RowIndex;
+
+            if (Miniatures == null) Miniatures = new List<Miniature>();
+            Miniatures.Clear();
+
+            UnitOffset = StandPosition.GetStandUnitOffset(ParentUnit.GetPivotMeshTransform(), parms.RowIndex, parms.FileIndex);
+            
+            var location = parms.Location + UnitOffset;
+
+            InitializeStandMesh(ParentUnit, parms.Rotation, location, _visible);
+            CreateStandSockets();
+            AddMiniaturesToStand(parms.Location, parms.Rotation);
+        }
 
         public bool GetVisibility()
         {
@@ -177,13 +204,15 @@ namespace PrimoVictoria.Models
         private void InitializeStandMesh(Unit parent, Vector3 rotation, Vector3 location, bool visible)
         {
             _mesh = Instantiate(original: _unitData.StandMesh, position: location, rotation: Quaternion.Euler(rotation));
-
+            
             _mesh.transform.SetParent(parent.transform);
             _mesh.GetComponent<MeshRenderer>().enabled = visible;
 
             StandController = _mesh.GetComponent<StandController>();
             StandController.ParentUnit = parent;
             StandController.Stand = this;
+
+            Debug.Log($"Initializing a stand at location {location} with rotation {_mesh.transform.rotation}");
         }
 
         private void CreateStandSockets()

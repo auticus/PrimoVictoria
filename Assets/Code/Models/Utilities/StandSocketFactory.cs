@@ -9,7 +9,7 @@ namespace PrimoVictoria.Assets.Code.Models.Utilities
     {
         private const int SOLO_MODELCOUNT = 1;
         private const int CONQUEST_INFANTRY_STAND = 4;
-        private const double CONQUEST_STAND_DIMENSION = 2.5;
+        private const double CONQUEST_STAND_DIMENSION = 2.5; //2.5" x 2.5"
         private const float TOLERANCE = 0.001f;
         
         public static List<StandSocket> CreateStandSocketsForStand(GameObject stand, UnitData unitData)

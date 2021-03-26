@@ -12,7 +12,7 @@ namespace PrimoVictoria.Assets.Code.Controllers
     public class UIController : MonoBehaviour
     {
         public Vector3 SelectedUnitLocation;
-        public Vector3[] SelectedUnitSockets;
+        public Vector3 CurrentMousePosition;
 
         public Guid Id;
 
@@ -28,23 +28,7 @@ namespace PrimoVictoria.Assets.Code.Controllers
             "Selected Cmd Stand Location: <none>" : 
             $"Selected Cmd Stand Location: {SelectedUnitLocation.ToString()}";
 
-        private string _selectedUnitSockets
-        {
-            get
-            {
-                if (SelectedUnitSockets == null || SelectedUnitSockets.Length == 0)
-                    return "Selected Cmd Stand Sockets: <none>";
-
-                var sb = new StringBuilder();
-                sb.Append("Selected Cmd Stand Sockets: ");
-                foreach (var socket in SelectedUnitSockets)
-                {
-                    sb.Append($"{socket}::");
-                }
-
-                return sb.ToString();
-            }
-        }
+        private string _currentMousePosition => $"Current Mouse Position:  {CurrentMousePosition.ToString()}";
 
         private void Start()
         {
@@ -74,7 +58,7 @@ namespace PrimoVictoria.Assets.Code.Controllers
             if (!_isDevConsoleVisible) return;
             var output = new StringBuilder();
             output.AppendLine(_selectedUnitLocation);
-            output.AppendLine(_selectedUnitSockets);
+            output.AppendLine(_currentMousePosition);
 
             _devConsoleText.text = output.ToString();
         }
