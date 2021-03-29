@@ -11,19 +11,19 @@ namespace PrimoVictoria.Assets.Code.Models.Parameters
         public Vector3 Location { get; }
         public Vector3 Rotation { get; }
         public int FileIndex { get; }
-        public int RowIndex { get; }
+        public int RankIndex { get; }
         public bool StandVisible { get; }
         public bool ModelMeshesVisible { get; }
 
         public StandInitializationParameters(Unit parent, UnitData data, Vector3 location, Vector3 rotation, 
-                                            int fileIndex, int rowIndex, bool standVisible, bool modelMeshesVisible)
+                                            int fileIndex, int rankIndex, bool standVisible, bool modelMeshesVisible)
         {
             Parent = parent;
             Data = data;
             Location = location;
             Rotation = rotation;
             FileIndex = fileIndex;
-            RowIndex = rowIndex;
+            RankIndex = rankIndex;
             StandVisible = standVisible;
             ModelMeshesVisible = modelMeshesVisible;
         }

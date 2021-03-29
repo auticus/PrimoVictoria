@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using PrimoVictoria.Assets.Code.Models;
 using PrimoVictoria.Assets.Code.Models.Parameters;
@@ -8,7 +7,6 @@ using PrimoVictoria.Assets.Code.Models.Utilities;
 using UnityEngine;
 using PrimoVictoria.Controllers;
 using PrimoVictoria.DataModels;
-using Unity.UNetWeaver;
 using Debug = UnityEngine.Debug;
 
 namespace PrimoVictoria.Models
@@ -33,7 +31,7 @@ namespace PrimoVictoria.Models
         /// <summary>
         /// What row in the unit does this occupy (refer to unit documentation)
         /// </summary>
-        public int RowIndex;
+        public int RankIndex;
 
         /// <summary>
         /// Based off of its location in the unit, the offset from the location passed that the stand actually occupies
@@ -75,12 +73,12 @@ namespace PrimoVictoria.Models
             _visible = parms.StandVisible;
             _modelsVisible = parms.ModelMeshesVisible;
             FileIndex = parms.FileIndex;
-            RowIndex = parms.RowIndex;
+            RankIndex = parms.RankIndex;
 
             if (Miniatures == null) Miniatures = new List<Miniature>();
             Miniatures.Clear();
 
-            UnitOffset = StandPosition.GetStandUnitOffset(ParentUnit.GetPivotMeshTransform(), parms.RowIndex, parms.FileIndex);
+            UnitOffset = StandPosition.GetStandUnitOffset(ParentUnit.GetPivotMeshTransform(), parms.RankIndex, parms.FileIndex);
             
             var location = parms.Location + UnitOffset;
 
@@ -118,11 +116,18 @@ namespace PrimoVictoria.Models
         /// <summary>
         /// Moves the individual stand
         /// </summary>
-        /// <param name="destinationPosition">the point on the table that the mouse was clicked.</param>
+        /// <param name="rawDestinationPosition">the point on the table that the mouse was clicked.</param>
         /// <param name="isRunning"></param>
-        public void Move(Vector3 destinationPosition, bool isRunning)
+        public void Move(Vector3 rawDestinationPosition, bool isRunning)
         {
-            MoveStand(destinationPosition, isRunning);
+            //the destination position passed was the point on the table clicked
+            //for the pivot mesh (the #1 stand) this should be where its front touches so will need offset from its middle to its front
+            //for every other mesh - a calculation of the point will need done to calculate where they need to move
+            StandController.Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
+
+            //todo: this works fine if the stand is already facing the direction - otherwise its rotation etc messes up
+            //need to rotate / wheel to face direction first
+            StandController.Destination = StandMovePosition.GetStandMovePosition(rawDestinationPosition, _mesh.transform, RankIndex, FileIndex);
         }
 
         #region Private Methods
@@ -131,13 +136,6 @@ namespace PrimoVictoria.Models
         {
             var args = new StandLocationArgs(_mesh.transform.position, _modelSockets.Select(socket => socket.StandPosition).ToArray());
             OnLocationChanged?.Invoke(this, args);
-        }
-
-        private void MoveStand(Vector3 destinationPosition, bool isRunning)
-        {
-            //will be moving the stand, and then the models on the stand.  the models on the stand will have an offset value of the location 
-            StandController.Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
-            StandController.Destination = destinationPosition;
         }
 
         /// <summary>

@@ -1,0 +1,9 @@
+the chronomancer
+
+Make the models move to the FRONT of their stand touching the destination not the middle
+---> when clicking a point, calculate the actual position (the point in the middle of the stand) and move to that instead
+
+Make the models form up multiple ranks (right now its just one rank)
+
+Make the models move in a line
+

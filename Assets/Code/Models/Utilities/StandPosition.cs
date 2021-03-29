@@ -1,5 +1,4 @@
 ﻿using System;
-using PrimoVictoria.Models;
 using UnityEngine;
 
 namespace PrimoVictoria.Assets.Code.Models.Utilities
@@ -40,7 +39,7 @@ namespace PrimoVictoria.Assets.Code.Models.Utilities
             return offset;
         }
 
-        private static bool IsPivotStand(int row, int file)
+        public static bool IsPivotStand(int row, int file)
         {
             return (file == 1 && row == 1);
         }

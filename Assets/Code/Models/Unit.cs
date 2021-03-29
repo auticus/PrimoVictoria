@@ -86,7 +86,7 @@ namespace PrimoVictoria.Models
                 standModel.StandCapacity = 4; //todo: this is locked into conquest and needs to not be hardcoded magic number
 
                 standModel.InitializeStand(new StandInitializationParameters(this, Data, parameters.UnitLocation, parameters.Rotation,
-                    fileIndex: file, rowIndex: row, parameters.StandVisible, parameters.ModelMeshesVisible));
+                    fileIndex: file, rankIndex: row, parameters.StandVisible, parameters.ModelMeshesVisible));
 
                 _stands.Add(standModel);
 
@@ -125,17 +125,16 @@ namespace PrimoVictoria.Models
         /// <summary>
         /// Moves the unit
         /// </summary>
-        /// <param name="pivotMeshPosition">Pivot Mesh Position is the point on the table that the mouse was clicked.
+        /// <param name="pivotMeshRawPosition">Pivot Mesh Position is the point on the table that the mouse was clicked.
         /// It is the location that the pivot soldier will land on and the others around him will be spaced as they need</param>
         /// <param name="isRunning"></param>
-        public void Move(Vector3 pivotMeshPosition, bool isRunning)
+        public void Move(Vector3 pivotMeshRawPosition, bool isRunning)
         {
             foreach (var stand in _stands)
             {
-                stand.Move(pivotMeshPosition, isRunning);
+                //todo: potentially if needed - thread this if the stands stutter or move out of pace
+                stand.Move(pivotMeshRawPosition, isRunning);
             }
-
-            //todo: move the rest of the unit based on a grid
         }
 
         private void RegisterEvents(Stand stand)
