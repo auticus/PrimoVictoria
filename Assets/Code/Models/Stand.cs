@@ -40,19 +40,6 @@ namespace PrimoVictoria.Models
 
         public EventHandler<StandLocationArgs> OnLocationChanged;
 
-        private GameObject _mesh; //the mesh that is the stand that the models are standing on
-        private bool _visible;  //if true will draw the stand that the models are on, if false will not (mostly useful for debugging / dev work)
-                                //note: i'd much rather use properties here and getters and setters but thats not currently the unity way
-
-        private bool _modelsVisible;  //if true will draw the model meshes on the stand.  If false, will only draw the stand
-        private UnitData _unitData; //data pertinent to the unit overall
-        private List<StandSocket> _modelSockets;
-
-        /// <summary>
-        /// The transform of the actual mesh that represents the stand
-        /// </summary>
-        public Transform MeshTransform => _mesh.transform;
-
         /// <summary>
         /// The size of the object's dimensions
         /// </summary>
@@ -61,9 +48,51 @@ namespace PrimoVictoria.Models
         /// <summary>
         /// The distance between the Stand's current location and its final destination
         /// </summary>
-        public float MoveDistance => Vector3.Distance(StandController.Destination, _mesh.transform.position);
+        public float MoveDistance => Vector3.Distance(Destination, _mesh.transform.position);
 
-        public Vector3 Destination => StandController.Destination;
+        /// <summary>
+        /// The location that the stand needs to travel to
+        /// </summary>
+        public Vector3 Destination;
+
+        /// <summary>
+        /// The stand's current rotation
+        /// </summary>
+        public Quaternion Rotation
+        {
+            get => _mesh.transform.rotation;
+            set => _mesh.transform.rotation = value;
+        }
+
+        public Vector3 Position
+        {
+            get => _mesh.transform.position;
+            set => _mesh.transform.position = value;
+        }
+
+        public Transform Transform => _mesh.transform;
+
+        /// <summary>
+        /// the rotation that the stand needs to be
+        /// </summary>
+        public Quaternion DestinationRotation;
+
+        /// <summary>
+        /// How fast the stand moves
+        /// </summary>
+        public float Speed;
+
+        /// <summary>
+        /// When TRUE will both rotate and move, if false will only rotate until reaching its rotation and then move
+        /// </summary>
+        public bool RotateAndMove;
+
+        private GameObject _mesh; //the mesh that is the stand that the models are standing on
+        private bool _visible;  //if true will draw the stand that the models are on, if false will not (mostly useful for debugging / dev work)
+        
+        private bool _modelsVisible;  //if true will draw the model meshes on the stand.  If false, will only draw the stand
+        private UnitData _unitData; //data pertinent to the unit overall
+        private List<StandSocket> _modelSockets;
 
         public void InitializeStand(StandInitializationParameters parms)
         {
@@ -78,8 +107,14 @@ namespace PrimoVictoria.Models
             if (Miniatures == null) Miniatures = new List<Miniature>();
             Miniatures.Clear();
 
-            UnitOffset = StandPosition.GetStandUnitOffset(ParentUnit.GetPivotMeshTransform(), parms.RankIndex, parms.FileIndex);
-            
+            var pivotStand = ParentUnit.GetPivotStand();
+            if (pivotStand == null)
+            {
+                pivotStand = this; //the first time through there will be no pivot stand, which means THIS is the pivot stand
+                
+            }
+        
+            UnitOffset = StandPosition.GetStandUnitOffset(pivotStand, parms.RankIndex, parms.FileIndex);
             var location = parms.Location + UnitOffset;
 
             InitializeStandMesh(ParentUnit, parms.Rotation, location, _visible);
@@ -107,6 +142,11 @@ namespace PrimoVictoria.Models
             _modelsVisible = value;
         }
 
+        public Vector3 TransformPoint(Vector3 standPosition)
+        {
+            return _mesh.transform.TransformPoint(standPosition); //weird offset of the model
+        }
+
         public void Select(Projectors projectors, bool isFriendly)
         {
             if (_visible) SelectStand(projectors, isFriendly);
@@ -114,7 +154,7 @@ namespace PrimoVictoria.Models
         }
 
         /// <summary>
-        /// Moves the individual stand
+        /// Moves the individual stand by setting its DestinationRotation and Destination properties (which will be captured by the StandController)
         /// </summary>
         /// <param name="rawDestinationPosition">the point on the table that the mouse was clicked.</param>
         /// <param name="isRunning"></param>
@@ -123,11 +163,17 @@ namespace PrimoVictoria.Models
             //the destination position passed was the point on the table clicked
             //for the pivot mesh (the #1 stand) this should be where its front touches so will need offset from its middle to its front
             //for every other mesh - a calculation of the point will need done to calculate where they need to move
-            StandController.Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
+            Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
 
-            //todo: this works fine if the stand is already facing the direction - otherwise its rotation etc messes up
-            //need to rotate / wheel to face direction first
-            StandController.Destination = StandMovePosition.GetStandMovePosition(rawDestinationPosition, _mesh.transform, RankIndex, FileIndex);
+            RotateAndMove = true;
+            DestinationRotation = StandMovePosition.GetStandMoveRotation(rawDestinationPosition, this, RankIndex, FileIndex);
+            Destination = StandMovePosition.GetStandMovePosition(rawDestinationPosition, this, RankIndex, FileIndex);
+        }
+
+        public bool ShouldMove()
+        {
+            var movementThreshold = 0.5f;
+            return Destination != Vector3.zero && MoveDistance > movementThreshold;
         }
 
         #region Private Methods

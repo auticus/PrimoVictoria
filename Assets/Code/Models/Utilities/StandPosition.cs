@@ -1,4 +1,5 @@
 ﻿using System;
+using PrimoVictoria.Models;
 using UnityEngine;
 
 namespace PrimoVictoria.Assets.Code.Models.Utilities
@@ -14,17 +15,17 @@ namespace PrimoVictoria.Assets.Code.Models.Utilities
         /// <param name="row"></param>
         /// <param name="file"></param>
         /// <returns>A vector3 representing the offset location</returns>
-        public static Vector3 GetStandUnitOffset(Transform stand, int row, int file)
+        public static Vector3 GetStandUnitOffset(Stand pivotStand, int row, int file)
         {
             if (IsPivotStand(row, file))
             {
                 return Vector3.zero;
             }
 
-            if (stand == null)
+            if (pivotStand?.Transform == null)
             {
                 Debug.LogError($"Stand was sent in to get offset that was not pivot stand but the Transform passed was null which is not allowed!");
-                throw new ArgumentException("Stand was sent in to get offset that was not pivot stand but the Transform passed was null which is not allowed", nameof(stand));
+                throw new ArgumentException("Stand was sent in to get offset that was not pivot stand but the Transform passed was null which is not allowed", nameof(pivotStand));
             }
 
             //file 1 = center of the row.  2, 4, 6, 8 etc are stands to the left, and 3,5G,7 etc are stands to the right
@@ -34,7 +35,7 @@ namespace PrimoVictoria.Assets.Code.Models.Utilities
 
             //todo: this is not done yet - need the rank offset as well - this is just testing
             Debug.Log($"offsetPosition = {offsetPosition} :: file = {file}");
-            var offset = GetStandFileOffset(stand, offsetPosition);
+            var offset = GetStandFileOffset(pivotStand.Transform, offsetPosition);
             
             return offset;
         }

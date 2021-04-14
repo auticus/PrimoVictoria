@@ -1,5 +1,10 @@
-﻿using PrimoVictoria.Models;
+﻿using System.Collections;
+using System.Numerics;
+using PrimoVictoria.Assets.Code.Models.Utilities;
+using PrimoVictoria.Models;
 using UnityEngine;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
 
 /// <summary>
 /// Class that represents the high level of a stand used for moving the stand and accessing the parent unit and stand data
@@ -8,8 +13,7 @@ public class StandController : MonoBehaviour
 {
     public Unit ParentUnit;
     public Stand Stand;
-    public Vector3 Destination;
-    public float Speed;
+    private bool _executingMovement;
 
     private void Start()
     {
@@ -18,25 +22,34 @@ public class StandController : MonoBehaviour
 
     private void Update()
     {
-        var currentPos = Stand.MeshTransform.position;
-        var currentRot = Stand.MeshTransform.rotation;
-        if (Vector3.Distance(currentPos, Destination) < 0.001f) return;
-
-        var step = Speed * Time.deltaTime; //calculate the distance to move
-        var direction = (Destination - currentPos).normalized;
-        var lookRotation = Quaternion.LookRotation(direction);
-
-        Stand.MeshTransform.rotation = Quaternion.Slerp(currentRot, lookRotation, Time.deltaTime * Speed);
-        Stand.MeshTransform.position = Vector3.MoveTowards(currentPos, Destination, step);
+        if (Stand.ShouldMove() && !_executingMovement)
+        {
+            _executingMovement = true;
+            StartCoroutine(MoveStand());
+        }
     }
 
     private void LateUpdate()
     {
-        //sample the height where we are and bump us up so we aren't clipping through the terrain
-        //removing this also makes the stand mesh do weird things when moving like ramp up and be dramatic when moving over bumps on the terrain
-        var pos = Stand.MeshTransform.position;
-        pos.y = GetHighestYCoordinate();
-        Stand.MeshTransform.position = pos; //PROBLEM - this is still not raising the piece up - and the Y is listed as higher than the terrain but the terrain is still clipping through
+        AdjustStandMeshHeight();
+    }
+
+    private IEnumerator MoveStand()
+    {
+        while (!IsFacing())
+        {
+            RotateStandMesh();
+            yield return null;
+        }
+
+        while (Stand.ShouldMove())
+        {
+            MoveStandMesh();
+            yield return null;
+        }
+
+        //yield return new WaitForSeconds(1); //just an example of WaitForSeconds
+        _executingMovement = false;
     }
 
     /// <summary>
@@ -48,15 +61,15 @@ public class StandController : MonoBehaviour
         //note that if the scale is "2" then that means 1 unit in any direction past center is the edge (divide by two)
         //0,0 is the center.  so some values will be negative and some positive around that
 
-        var xScale = Stand.MeshTransform.transform.localScale.x;
-        var zScale = Stand.MeshTransform.transform.localScale.z;
-        var x = Stand.MeshTransform.transform.position.x + (xScale / 2);
-        var y = Stand.MeshTransform.transform.position.y;
-        var z = Stand.MeshTransform.transform.position.z + (zScale / 2);
+        var xScale = Stand.MeshScale.x;
+        var zScale = Stand.MeshScale.z;
+        var x = Stand.Position.x + (xScale / 2);
+        var y = Stand.Position.y;
+        var z = Stand.Position.z + (zScale / 2);
 
         var points = new Vector3[]
         {
-            new Vector3(Stand.MeshTransform.transform.position.x,Stand.MeshTransform.transform.position.y, Stand.MeshTransform.transform.position.z),
+            new Vector3(Stand.Position.x,Stand.Position.y, Stand.Position.z),
             new Vector3(x,y,z),
             new Vector3(-x, y, -z),
             new Vector3(-x, y, z),
@@ -71,5 +84,43 @@ public class StandController : MonoBehaviour
         }
 
         return highestY;
+    }
+
+    private void AdjustStandMeshHeight()
+    {
+        //sample the height where we are and bump us up so we aren't clipping through the terrain
+        //removing this also makes the stand mesh do weird things when moving like ramp up and be dramatic when moving over bumps on the terrain
+        var pos = Stand.Position;
+        pos.y = GetHighestYCoordinate();
+        Stand.Position = pos; //PROBLEM - this is still not raising the piece up - and the Y is listed as higher than the terrain but the terrain is still clipping through
+    }
+
+    /// <summary>
+    /// Rotates the mesh if needed.  
+    /// </summary>
+    /// <returns>RETURNS TRUE if a rotation occurred</returns>
+    private void RotateStandMesh()
+    {
+        //Debug.Log("Rotating");
+        var direction = (Stand.Destination - Stand.Position).normalized;
+        var lookRotation = Quaternion.LookRotation(direction);
+
+        Stand.Rotation = Quaternion.Slerp(Stand.Rotation, lookRotation, Time.deltaTime * Stand.Speed);
+    }
+
+    private void MoveStandMesh()
+    {
+        var step = Stand.Speed * Time.deltaTime; //calculate the distance to move
+        var direction = (Stand.Destination - Stand.Position).normalized;
+        var lookRotation = Quaternion.LookRotation(direction);
+        Stand.Position = Vector3.MoveTowards(Stand.Position, Stand.Destination, step);
+        //Debug.Log($"Current Position={Stand.Position}::Destination = {Stand.Destination}::Registered Distance Left = {Stand.MoveDistance}::Step = {step}");
+    }
+
+    private bool IsFacing()
+    {
+        var angle = Vector3.Angle(Stand.Transform.forward, Stand.Destination - Stand.Transform.position);
+        //Debug.Log($"Checking if facing::Angle={angle}");
+        return angle < 10;
     }
 }

@@ -1,9 +1,18 @@
-the chronomancer
-
 Make the models move to the FRONT of their stand touching the destination not the middle
 ---> when clicking a point, calculate the actual position (the point in the middle of the stand) and move to that instead
+---[ ] - the front of the stand should be where the mouse click is
+---[ ] - the calculated position does not allow for that for whatever reason
 
-Make the models form up multiple ranks (right now its just one rank)
+[ ] - when moving - the stands are smacking each other or some can't move (especially near the hill)
 
-Make the models move in a line
+[ ] Make the models form up multiple ranks (right now its just one rank)
+
+[ ] - wheel a whole unit moving (fun times)
+
+
+=======================================
+
+
+
+
 

@@ -28,7 +28,6 @@ namespace PrimoVictoria.Controllers
         private const string PRELOAD_SCENE = "Preload";
         private const string SANDBOX_SCENE = "Sandbox";
         private const string UNITS_GAMEOBJECT = "Units";
-        private const string PRIMO_UI = "PrimoUI";
         private UIController _uiController; //the reference to the UIController (for things like the dev console etc)
 
         private Unit _selectedUnit;
@@ -59,6 +58,17 @@ namespace PrimoVictoria.Controllers
                 {
                     _uiController.SelectedUnitLocation = Vector3.zero;
                 }
+            }
+        }
+
+        private List<Vector3> _selectedUnitDestinations;
+        public List<Vector3> SelectedUnitDestinations
+        {
+            get => _selectedUnitDestinations;
+            set
+            {
+                _selectedUnitDestinations = value;
+                _uiController.SetNewUnitLocation(_selectedUnitDestinations);
             }
         }
 
@@ -121,14 +131,7 @@ namespace PrimoVictoria.Controllers
 
         private void SetGameObjectReferences()
         {
-            var primoUI = GameObject.Find(PRIMO_UI);
-            if (primoUI == null)
-            {
-                Debug.LogWarning("The game requires the PrimoUI GameObject to exist in the scene and it was not found");
-                return;
-            }
-
-            _uiController = primoUI.GetComponentInChildren<UIController>();
+            _uiController = FindObjectOfType<UIController>();
             if (_uiController == null)
             {
                 Debug.LogWarning("The game requires that the UIController component exist on the PrimoUI GameObject");
@@ -153,7 +156,7 @@ namespace PrimoVictoria.Controllers
             exampleUnit.Data = Faction_0_Units[0];  //obviously we need to not hardcode this, its for setup testing only - requires that this element exist on the editor window
             exampleUnit.ID = 1;
 
-            var initializationParameters = new UnitInitializationParameters(unit, unitID:1, standCount:1, horizontalStandCount:1, location, rotation,
+            var initializationParameters = new UnitInitializationParameters(unit, unitID:1, standCount:3, horizontalStandCount:3, location, rotation,
                 standVisible: true, modelMeshesVisible: true);
 
             exampleUnit.InitializeUnit(initializationParameters);
@@ -204,7 +207,7 @@ namespace PrimoVictoria.Controllers
                 SelectedUnit.Move(e.WorldPosition, isRunning: false);
             }
 
-            _uiController.CurrentMousePosition = e.WorldPosition;
+            _uiController.MouseClickPosition = e.WorldPosition;
         }
 
         private void SelectUnitMeshes(int unitID)

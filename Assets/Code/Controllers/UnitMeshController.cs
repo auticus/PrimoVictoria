@@ -23,7 +23,7 @@ namespace PrimoVictoria.Controllers
         private Vector2 SmoothDeltaPosition = Vector2.zero;
         private Vector2 Velocity = Vector2.zero;
 
-        private float _movementThreshold = 0.5f; //when distance remaining <= this, stop moving
+        private float _movementThreshold = 0.9f; //when distance remaining <= this, stop moving
 
         // Start is called before the first frame update
         protected void Start()
@@ -64,20 +64,15 @@ namespace PrimoVictoria.Controllers
             //var shouldMove = Velocity.magnitude > 0.5f && Agent.remainingDistance > 0;
             
             //update animation parameters
-            Animator.SetBool("Move", ShouldMove());
+            Animator.SetBool("Move", ParentStand.ShouldMove());
         }
 
         private void UpdatePosition()
         {
             //Socket location is the local location so use transform.TransformPoint to convert from its local position to a world position
             //Debug.Log($"Socket Local={Socket.StandPosition} :: Socket World={ParentStand.MeshTransform.transform.TransformPoint(Socket.StandPosition)} :: Stand World={ParentStand.MeshTransform.position}");
-            transform.rotation = ParentStand.MeshTransform.rotation;
-            transform.position = ParentStand.MeshTransform.transform.TransformPoint(Socket.StandPosition); //weird offset of the model
-        }
-
-        private bool ShouldMove()
-        {
-            return ParentStand.Destination != Vector3.zero && ParentStand.MoveDistance > _movementThreshold;
+            transform.rotation = ParentStand.Rotation;
+            transform.position = ParentStand.TransformPoint(Socket.StandPosition); //weird offset of the model
         }
     }
 }

@@ -19,34 +19,29 @@ namespace PrimoVictoria.Models
         public EventHandler<StandLocationArgs> OnLocationChanged;
 
         private List<Stand> _stands;
-        private Transform _pivotStandMeshTransform;  //the central stand in the first rank
+        private Stand _pivotStand;  //the central stand in the first rank
         private Vector3 _pivotStandMeshScale; //how big the stand is
         private GameObject _unit; //the owning game object
         private bool _standsVisible;
+        private GameManager _gameManager;
 
         public void SetLocation(Vector3 location)
         {
             throw new NotImplementedException("This feature has not been implemented yet Tokies");
         }
 
-        public Transform GetPivotMeshTransform() => _pivotStandMeshTransform;
+        public Stand GetPivotStand() => _pivotStand;
         /// <summary>
         /// The location of the unit based on the position of its Pivot Stand
         /// </summary>
         /// <returns></returns>
-        public Vector3 GetLocation() => _pivotStandMeshTransform.position;
-
-        /// <summary>
-        /// The rotation of the unit in Euler angles based on the rotation of its Pivot Stand
-        /// </summary>
-        /// <returns></returns>
-        public Vector3 GetRotationVector() => _pivotStandMeshTransform.eulerAngles;
+        public Vector3 GetLocation() => _pivotStand.Position;
 
         /// <summary>
         /// The rotation of the unit based on its Pivot Stand
         /// </summary>
         /// <returns></returns>
-        public Quaternion GetRotation() => _pivotStandMeshTransform.rotation;
+        public Quaternion GetRotation() => _pivotStand.Rotation;
 
         public void SetRotation(float rotation)
         {
@@ -80,9 +75,8 @@ namespace PrimoVictoria.Models
 
                 var stand = new GameObject($"Stand_{Data.Name}_{i + 1}");
                 var standModel = stand.AddComponent<Stand>();
-                
+
                 stand.transform.SetParent(this.transform);
-                
                 standModel.StandCapacity = 4; //todo: this is locked into conquest and needs to not be hardcoded magic number
 
                 standModel.InitializeStand(new StandInitializationParameters(this, Data, parameters.UnitLocation, parameters.Rotation,
@@ -93,7 +87,7 @@ namespace PrimoVictoria.Models
                 if (i == 0)
                 {
                     RegisterEvents(standModel); //first stand set its event up to track its location
-                    _pivotStandMeshTransform = standModel.MeshTransform;
+                    _pivotStand = standModel;
                     _pivotStandMeshScale = standModel.MeshScale;
                 }
             }
@@ -130,11 +124,19 @@ namespace PrimoVictoria.Models
         /// <param name="isRunning"></param>
         public void Move(Vector3 pivotMeshRawPosition, bool isRunning)
         {
+            var destinations = new List<Vector3>();
             foreach (var stand in _stands)
             {
-                //todo: potentially if needed - thread this if the stands stutter or move out of pace
                 stand.Move(pivotMeshRawPosition, isRunning);
+                destinations.Add(stand.Destination);
             }
+
+            _gameManager.SelectedUnitDestinations = destinations;
+        }
+
+        private void Start()
+        {
+            _gameManager = FindObjectOfType<GameManager>();
         }
 
         private void RegisterEvents(Stand stand)
