@@ -30,14 +30,12 @@ namespace PrimoVictoria.Assets.Code.Models.Utilities
 
             //file 1 = center of the row.  2, 4, 6, 8 etc are stands to the left, and 3,5G,7 etc are stands to the right
             //like this:  4 - 2 - 1 - 3 - 5
-            var rawOffset = 0.0f;
             var offsetPosition = GetOffsetPosition(file);
-
-            //todo: this is not done yet - need the rank offset as well - this is just testing
-            Debug.Log($"offsetPosition = {offsetPosition} :: file = {file}");
-            var offset = GetStandFileOffset(pivotStand.Transform, offsetPosition);
+            var fileOffset = GetStandFileOffset(pivotStand, offsetPosition);
+            var finalOffset = GetStandRankOffset(pivotStand, fileOffset, row);  
             
-            return offset;
+            //Debug.Log($"GetStandUnitOffset - row={row}::file={file}:: fileOffset={fileOffset}:: finalOffset={finalOffset}");
+            return finalOffset;
         }
 
         public static bool IsPivotStand(int row, int file)
@@ -65,12 +63,36 @@ namespace PrimoVictoria.Assets.Code.Models.Utilities
         /// <summary>
         /// Given a filePosition in the unit, determine its world position from the file (horizontal column)
         /// </summary>
-        /// <param name="filePosition"></param>
+        /// <param name="filePosition">One based index where 1 is the center pivot stand, negative numbers are left, positive to the right</param>
         /// <returns></returns>
-        private static Vector3 GetStandFileOffset(Transform stand, int filePosition)
+        private static Vector3 GetStandFileOffset(Stand stand, int filePosition)
         {
-            var direction = filePosition > 0 ? stand.right : stand.right * -1;
-            var offset = direction * stand.transform.localScale.x; //this could be an issue if x and y are different, but in CONQUEST its a square
+            if (filePosition == 0)
+            {
+                return Vector3.zero;
+            }
+            var direction = filePosition > 0 ? stand.Transform.right : stand.Transform.right * -1;
+
+            //this could be an issue if x and y are different, but in CONQUEST its a square
+            //abs used because filePosition is negative to indicate left, positive to indicate right, but for offset we dont care about pos/neg
+            var offset = direction * (stand.Transform.localScale.x * Math.Abs(filePosition)); 
+            return offset;
+        }
+
+        /// <summary>
+        /// Given a stand, its rank position, and its already determined fileOffset, calculate its final position based on rank
+        /// </summary>
+        /// <param name="stand"></param>
+        /// <param name="fileOffset">The adjusted vector3 representing the stand's file position</param>
+        /// <param name="rankPosition">A one-based index determining what row the stand is in</param>
+        /// <returns></returns>
+        private static Vector3 GetStandRankOffset(Stand stand, Vector3 fileOffset, int rankPosition)
+        {
+            if (rankPosition == 1) return fileOffset;
+
+            rankPosition -= 1; //this is used for an offset, rank 1 means dont offset (0)
+            var direction = stand.Transform.forward * -1;
+            var offset = fileOffset + (direction * (stand.Transform.localScale.x * rankPosition));
             return offset;
         }
 

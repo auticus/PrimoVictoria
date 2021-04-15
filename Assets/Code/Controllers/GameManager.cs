@@ -156,7 +156,7 @@ namespace PrimoVictoria.Controllers
             exampleUnit.Data = Faction_0_Units[0];  //obviously we need to not hardcode this, its for setup testing only - requires that this element exist on the editor window
             exampleUnit.ID = 1;
 
-            var initializationParameters = new UnitInitializationParameters(unit, unitID:1, standCount:3, horizontalStandCount:3, location, rotation,
+            var initializationParameters = new UnitInitializationParameters(unit, unitID:1, standCount:6, horizontalStandCount:3, location, rotation,
                 standVisible: true, modelMeshesVisible: true);
 
             exampleUnit.InitializeUnit(initializationParameters);

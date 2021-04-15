@@ -5,8 +5,6 @@ Make the models move to the FRONT of their stand touching the destination not th
 
 [ ] - when moving - the stands are smacking each other or some can't move (especially near the hill)
 
-[ ] Make the models form up multiple ranks (right now its just one rank)
-
 [ ] - wheel a whole unit moving (fun times)
 
 

@@ -255,8 +255,6 @@ namespace PrimoVictoria.Models
             StandController = _mesh.GetComponent<StandController>();
             StandController.ParentUnit = parent;
             StandController.Stand = this;
-
-            Debug.Log($"Initializing a stand at location {location} with rotation {_mesh.transform.rotation}");
         }
 
         private void CreateStandSockets()
