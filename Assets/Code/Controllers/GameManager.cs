@@ -21,7 +21,9 @@ namespace PrimoVictoria.Controllers
         
         public const string MESH_DECORATOR_TAG = "UnitMeshDecorator";
         public const string SELECT_BUTTON = "Input1"; //the name of the control set in bindings
-        public const string EXECUTE_BUTTON = "Input2"; 
+        public const string EXECUTE_BUTTON = "Input2";
+        public const string WHEEL_LEFT = "WheelUnitLeft";
+        public const string WHEEL_RIGHT = "WheelUnitRight";
 
         [SerializeField] List<UnitData> Faction_0_Units;
 
@@ -87,7 +89,7 @@ namespace PrimoVictoria.Controllers
 
         private void Update()
         {
-            
+            HandleInputs();
         }
     
         private void InitGame()
@@ -156,7 +158,7 @@ namespace PrimoVictoria.Controllers
             exampleUnit.Data = Faction_0_Units[0];  //obviously we need to not hardcode this, its for setup testing only - requires that this element exist on the editor window
             exampleUnit.ID = 1;
 
-            var initializationParameters = new UnitInitializationParameters(unit, unitID:1, standCount:6, horizontalStandCount:3, location, rotation,
+            var initializationParameters = new UnitInitializationParameters(unit, unitID:1, standCount:1, horizontalStandCount:1, location, rotation,
                 standVisible: true, modelMeshesVisible: true);
 
             exampleUnit.InitializeUnit(initializationParameters);
@@ -229,6 +231,30 @@ namespace PrimoVictoria.Controllers
                     SelectedUnit = unit;
                     break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Handles Keyboard / controller inputs
+        /// </summary>
+        private void HandleInputs()
+        {
+            if (Input.GetButton(WHEEL_LEFT) && SelectedUnit != null)
+            {
+                SelectedUnit.Wheel(Vector3.left, isRunning: false);
+            }
+            else if (Input.GetButtonUp(WHEEL_LEFT) && SelectedUnit != null)
+            {
+                SelectedUnit.StopWheel();
+            }
+
+            if (Input.GetButton(WHEEL_RIGHT) && SelectedUnit != null)
+            {
+                SelectedUnit.Wheel(Vector3.right, isRunning: false);
+            }
+            else if (Input.GetButtonUp(WHEEL_RIGHT) && SelectedUnit != null)
+            {
+                SelectedUnit.StopWheel();
             }
         }
     }

@@ -22,7 +22,6 @@ namespace PrimoVictoria.Models
         private Stand _pivotStand;  //the central stand in the first rank
         private Vector3 _pivotStandMeshScale; //how big the stand is
         private GameObject _unit; //the owning game object
-        private bool _standsVisible;
         private GameManager _gameManager;
 
         public void SetLocation(Vector3 location)
@@ -42,13 +41,6 @@ namespace PrimoVictoria.Models
         /// </summary>
         /// <returns></returns>
         public Quaternion GetRotation() => _pivotStand.Rotation;
-
-        public void SetRotation(float rotation)
-        {
-            //setting rotation:  https://docs.unity3d.com/ScriptReference/Transform-eulerAngles.html or https://docs.unity3d.com/ScriptReference/Quaternion-operator_multiply.html
-            //setting the Y in the euler, x & z should stay 0
-            throw new NotImplementedException("This feature has not been implemented yet Tokies");
-        }
 
         /// <summary>
         /// Game Controller method which will set the meshes within the unit
@@ -132,6 +124,30 @@ namespace PrimoVictoria.Models
             }
 
             _gameManager.SelectedUnitDestinations = destinations;
+        }
+
+        /// <summary>
+        /// Will wheel the unit in the direction passed
+        /// </summary>
+        /// <param name="direction">a vector3 that is either right or left</param>
+        /// <param name="isRunning">should the models appear to be running</param>
+        public void Wheel(Vector3 direction, bool isRunning)
+        {
+            if (direction != Vector3.right && direction != Vector3.left)
+                throw new ArgumentOutOfRangeException(nameof(direction), "direction must be vector right or left");
+
+            foreach (var stand in _stands)
+            {
+                stand.Wheel(direction, isRunning);
+            }
+        }
+
+        public void StopWheel()
+        {
+            foreach (var stand in _stands)
+            {
+                stand.StopRotating();
+            }
         }
 
         private void Start()

@@ -64,7 +64,7 @@ namespace PrimoVictoria.Controllers
             //var shouldMove = Velocity.magnitude > 0.5f && Agent.remainingDistance > 0;
             
             //update animation parameters
-            Animator.SetBool("Move", ParentStand.ShouldMove());
+            Animator.SetBool("Move", ParentStand.ShouldMove);
         }
 
         private void UpdatePosition()

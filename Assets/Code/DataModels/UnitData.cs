@@ -39,5 +39,6 @@ namespace PrimoVictoria.DataModels
 
         public float WalkSpeed = 2.0f;  //the navagent speed when walking (2.0 is an infantry man walk)
         public float RunSpeed = 5.0f;  //the navagent speed when running (5.0 is an infantry man run)
+        public float WheelSpeed = 25.0f; //the speed multiplier when wheeling
     }
 }

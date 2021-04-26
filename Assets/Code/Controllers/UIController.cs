@@ -69,6 +69,9 @@ namespace PrimoVictoria.Assets.Code.Controllers
             _devConsoleText = _devConsole.GetComponentInChildren<TextMeshProUGUI>();
         }
 
+        /// <summary>
+        /// Monitors and watches for keyboard and controller inputs
+        /// </summary>
         private void HandleInput()
         {
             if (Input.GetButtonUp("DeveloperMode")) _isDevConsoleVisible = !_isDevConsoleVisible;

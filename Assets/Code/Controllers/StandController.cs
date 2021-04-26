@@ -1,7 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Linq;
 using System.Numerics;
 using PrimoVictoria.Assets.Code.Models.Utilities;
 using PrimoVictoria.Models;
+using Unity.UNetWeaver;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
@@ -15,14 +18,9 @@ public class StandController : MonoBehaviour
     public Stand Stand;
     private bool _executingMovement;
 
-    private void Start()
-    {
-        
-    }
-
     private void Update()
     {
-        if (Stand.ShouldMove() && !_executingMovement)
+        if ((Stand.ShouldMove || Stand.ShouldRotate) && !_executingMovement)
         {
             _executingMovement = true;
             StartCoroutine(MoveStand());
@@ -36,13 +34,13 @@ public class StandController : MonoBehaviour
 
     private IEnumerator MoveStand()
     {
-        while (!IsFacing())
+        while(Stand.ShouldRotate)
         {
             RotateStandMesh();
             yield return null;
         }
 
-        while (Stand.ShouldMove())
+        while (Stand.ShouldMove)
         {
             MoveStandMesh();
             yield return null;
@@ -67,7 +65,7 @@ public class StandController : MonoBehaviour
         var y = Stand.Position.y;
         var z = Stand.Position.z + (zScale / 2);
 
-        var points = new Vector3[]
+        var points = new[]
         {
             new Vector3(Stand.Position.x,Stand.Position.y, Stand.Position.z),
             new Vector3(x,y,z),
@@ -76,14 +74,8 @@ public class StandController : MonoBehaviour
             new Vector3(x, y, -z)
         };
 
-        var highestY = 0.0f;
-        foreach (var point in points)
-        {
-            var currentY = Terrain.activeTerrain.SampleHeight(point);
-            if (currentY > highestY) highestY = currentY;
-        }
-
-        return highestY;
+        //for every point in the array, get the height and return back the highest point found (in this case by putting all the heights into a new array and then getting max)
+        return points.Select(point => Terrain.activeTerrain.SampleHeight(point)).Concat(new[] {0.0f}).Max();
     }
 
     private void AdjustStandMeshHeight()
@@ -96,31 +88,22 @@ public class StandController : MonoBehaviour
     }
 
     /// <summary>
-    /// Rotates the mesh if needed.  
+    /// Rotates the mesh if needed
     /// </summary>
     /// <returns>RETURNS TRUE if a rotation occurred</returns>
     private void RotateStandMesh()
     {
-        //Debug.Log("Rotating");
-        var direction = (Stand.Destination - Stand.Position).normalized;
-        var lookRotation = Quaternion.LookRotation(direction);
+        //we're rotating around the Y axis so transform right or left into up or down
+        var direction = Stand.RotationDirection == Vector3.right ? Vector3.up : Vector3.up * -1;
+        Stand.Transform.Rotate(direction * (Stand.Speed * Time.deltaTime * Stand.WheelSpeed));
 
-        Stand.Rotation = Quaternion.Slerp(Stand.Rotation, lookRotation, Time.deltaTime * Stand.Speed);
+        if (Stand.IsFacingDestination) Stand.StopRotating();
     }
 
     private void MoveStandMesh()
     {
         var step = Stand.Speed * Time.deltaTime; //calculate the distance to move
-        var direction = (Stand.Destination - Stand.Position).normalized;
-        var lookRotation = Quaternion.LookRotation(direction);
         Stand.Position = Vector3.MoveTowards(Stand.Position, Stand.Destination, step);
         //Debug.Log($"Current Position={Stand.Position}::Destination = {Stand.Destination}::Registered Distance Left = {Stand.MoveDistance}::Step = {step}");
-    }
-
-    private bool IsFacing()
-    {
-        var angle = Vector3.Angle(Stand.Transform.forward, Stand.Destination - Stand.Transform.position);
-        //Debug.Log($"Checking if facing::Angle={angle}");
-        return angle < 10;
     }
 }

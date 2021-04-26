@@ -22,6 +22,19 @@ namespace PrimoVictoria.Models
         public StandController StandController; //the stand's controller, part of the StandMesh but pulled out on initialization for performance reasons
 
         public int StandCapacity;  //how many models fit on the stand at full capacity
+
+        /// <summary>
+        /// The default threshold to come within
+        /// </summary>
+        public const float MOVE_THRESHOLD = 0.5f;
+
+        /// <summary>
+        /// The default angle rotation to come within on rotations
+        /// </summary>
+        public const float ROTATION_THRESHOLD = 12.0f;
+
+        public const float WHEEL_DEGREES = 10.0f;
+
         
         /// <summary>
         /// What position in the unit footprint does this occupy (refer to unit documentation)
@@ -43,12 +56,13 @@ namespace PrimoVictoria.Models
         /// <summary>
         /// The size of the object's dimensions
         /// </summary>
-        public Vector3 MeshScale => _mesh.transform.localScale;
+        public Vector3 MeshScale => Transform.localScale;
 
         /// <summary>
         /// The distance between the Stand's current location and its final destination
         /// </summary>
-        public float MoveDistance => Vector3.Distance(Destination, _mesh.transform.position);
+        public float MoveDistance => Vector3.Distance(Destination, Transform.position);
+
 
         /// <summary>
         /// The location that the stand needs to travel to
@@ -56,36 +70,61 @@ namespace PrimoVictoria.Models
         public Vector3 Destination;
 
         /// <summary>
+        /// When not set to identity tells the stand to rotate in that direction its speed for that frame
+        /// </summary>
+        public Vector3 RotationDirection;
+
+        /// <summary>
+        /// When TRUE, is not manual movement - user clicked somewhere and unit is moving there
+        /// </summary>
+        public bool AutoMoving;
+
+        /// <summary>
         /// The stand's current rotation
         /// </summary>
         public Quaternion Rotation
         {
-            get => _mesh.transform.rotation;
-            set => _mesh.transform.rotation = value;
+            get => Transform.rotation;
+            set => Transform.rotation = value;
         }
-
-        public Vector3 Position
-        {
-            get => _mesh.transform.position;
-            set => _mesh.transform.position = value;
-        }
-
-        public Transform Transform => _mesh.transform;
 
         /// <summary>
-        /// the rotation that the stand needs to be
+        /// The stand's current position
         /// </summary>
-        public Quaternion DestinationRotation;
+        public Vector3 Position
+        {
+            get => Transform.position;
+            set => Transform.position = value;
+        }
+
+        /// <summary>
+        /// if TRUE means the stand is facing the Destination point (if one has been set)
+        /// </summary>
+        public bool IsFacingDestination => Destination != Vector3.zero && LookDirectionToDestinationAngle < ROTATION_THRESHOLD;
+        private float LookDirectionToDestinationAngle => Vector3.Angle(Transform.forward, Destination - Transform.position);
+
+        /// <summary>
+        /// Flag that indicates if the Stand should perform a movement to reach its target destination
+        /// </summary>
+        /// <returns></returns>
+        public bool ShouldMove => Destination != Vector3.zero && MoveDistance > MOVE_THRESHOLD;
+
+        /// <summary>
+        /// Returns TRUE if RotationDirection is not a zero vector
+        /// </summary>
+        public bool ShouldRotate => RotationDirection != Vector3.zero;
+        
+        /// <summary>
+        /// The transform of the pivot mesh itself, (not the Stand::GameObject)
+        /// </summary>
+        public Transform Transform => _mesh.transform;
 
         /// <summary>
         /// How fast the stand moves
         /// </summary>
         public float Speed;
 
-        /// <summary>
-        /// When TRUE will both rotate and move, if false will only rotate until reaching its rotation and then move
-        /// </summary>
-        public bool RotateAndMove;
+        public float WheelSpeed => _unitData.WheelSpeed;
 
         private GameObject _mesh; //the mesh that is the stand that the models are standing on
         private bool _visible;  //if true will draw the stand that the models are on, if false will not (mostly useful for debugging / dev work)
@@ -156,24 +195,39 @@ namespace PrimoVictoria.Models
         /// <summary>
         /// Moves the individual stand by setting its DestinationRotation and Destination properties (which will be captured by the StandController)
         /// </summary>
-        /// <param name="rawDestinationPosition">the point on the table that the mouse was clicked.</param>
+        /// <param name="rawDestinationPosition">the point on the table that the mouse was clicked and the pivot stand will move to.</param>
         /// <param name="isRunning"></param>
         public void Move(Vector3 rawDestinationPosition, bool isRunning)
         {
             //the destination position passed was the point on the table clicked
             //for the pivot mesh (the #1 stand) this should be where its front touches so will need offset from its middle to its front
             //for every other mesh - a calculation of the point will need done to calculate where they need to move
+            AutoMoving = true;
             Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
-
-            RotateAndMove = true;
-            DestinationRotation = StandMovePosition.GetStandMoveRotation(rawDestinationPosition, this, RankIndex, FileIndex);
+            RotationDirection = StandMovePosition.GetDirectionToLookAtPoint(rawDestinationPosition, this, RankIndex, FileIndex);
             Destination = StandMovePosition.GetStandMovePosition(rawDestinationPosition, this, RankIndex, FileIndex);
         }
 
-        public bool ShouldMove()
+        /// <summary>
+        /// Wheels a stand that is part of a unit
+        /// </summary>
+        /// <param name="direction">The direction to wheel the unit</param>
+        /// <param name="isRunning"></param>
+        public void Wheel(Vector3 direction, bool isRunning)
         {
-            var movementThreshold = 0.5f;
-            return Destination != Vector3.zero && MoveDistance > movementThreshold;
+            //rotation in a wheel - the stands all will have the same facing 
+            AutoMoving = false;
+            Destination = Vector3.zero; 
+            Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
+            RotationDirection = direction;
+
+            //todo: the inner part of the wheel doesnt move
+            //the outer stands move the furthest
+        }
+
+        public void StopRotating()
+        {
+            RotationDirection = Vector3.zero;
         }
 
         #region Private Methods

@@ -32,10 +32,10 @@ namespace PrimoVictoria.Assets.Code.Models.Utilities
         }
 
         /// <summary>
-        /// Calculates the rotation required for the stand to turn to face the point given
+        /// Calculates the direction required for the stand to turn to face the point given
         /// </summary>
         /// <returns></returns>
-        public static Quaternion GetStandMoveRotation(Vector3 mouseClickPosition, Stand stand, int rank, int file)
+        public static Vector3 GetDirectionToLookAtPoint(Vector3 mouseClickPosition, Stand stand, int rank, int file)
         {
             //the mouse clicked a position on the table.  the stand should move to this position but the FRONT of the stand needs to stop at this
             //that means that the transform position needs to be adjusted so that it stops behind this point 
@@ -45,11 +45,13 @@ namespace PrimoVictoria.Assets.Code.Models.Utilities
             //Offset that value back half the stand's height to get its true position
             var distance = stand.Transform.localScale.x / 2;
             var truePosition = (mouseClickPosition + offset) - (stand.Transform.forward * distance);
+            return WhichWayToTurn(truePosition, stand);
+        }
 
-            var direction = (truePosition - stand.Transform.position).normalized;
-            var lookRotation = Quaternion.LookRotation(direction);
-
-            return lookRotation;
+        private static Vector3 WhichWayToTurn(Vector3 target, Stand stand)
+        {
+            var whichWay = Vector3.Cross(stand.Transform.forward, target - stand.Transform.position).y; //left or right?
+            return whichWay < 0 ? Vector3.left : Vector3.right;
         }
     }
 }

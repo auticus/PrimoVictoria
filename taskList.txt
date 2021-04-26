@@ -3,14 +3,66 @@ Make the models move to the FRONT of their stand touching the destination not th
 ---[ ] - the front of the stand should be where the mouse click is
 ---[ ] - the calculated position does not allow for that for whatever reason
 
+pointing and clicking - it doesn't understand to stay in formation.  it doesn't understand wheeling
+
 [ ] - when moving - the stands are smacking each other or some can't move (especially near the hill)
 
 [ ] - wheel a whole unit moving (fun times)
+---> wheel based off of a rotation click (right arrow / left arrow) (WheelUnitLeft / WheelUnitRight)
+---> wheel based off of turning to face a point (right click)
+--->[] Rotate changes
+redoing standmoveposition - just returning a direction to rotate
+------> something has to exist to either keep this vector in the direction it needs OR stop it
+------> when complete the braces will rotate left and right, and right clicking should rotate the stand
+	to where it needs to go
 
+WHERE DID WE LEAVE OFF:  it knows to rotate when yuou right click but will always rotate. 
+need something to say stop rotating once we are facing the target
+Keyboard rotation works fine
 
+Wheeling - still have not touched this yet
 =======================================
 
+KEY SHORTCUTS
+[ ] - rotate stands left & right
 
 
+Distance between two 3d points = pythagorum theorum
+p1 (10,0,5) and p2 (6,2,8)
+Distance between them?  
+square root of ((6-10)^2 + (2-0)^2 + (8-5)^2)
+or square root of ((-4)^2 + (2)^2 + (3)^2)
+or square root of ((16) + (4) + (9)) or square root of 29
+or 5.385
 
+Computing magnitude (distance) of a vector
+Given two positions p1 and p2
+var diff = p1 - p2;  (diff is now a vector3)
+var magnitude = diff.magnitude;
+var direction = diff.Direction;
 
+diff is both the distance between the two points and the direction from p1 to p2.
+p1 and p2 are both what are known as POSITION VECTORS
+the 0,0,0 position vector is the ZERO VECTOR
+
+FINDING THE DIRECTION
+Following the vector ... given two points we can determine the distance or Vector (as above)
+therefore the direction is how you travel from p1 to p2
+so p2 = p1 + Vector(d) = (x1 + dx, y1 +dy, z1 + dz) or = (x2, y2, z2)
+or - given a start point p1, if you apply the vector d to it, you will get to p2
+
+var direction = p2.transform.localPosition - p1.transform.localPosition;
+
+SCALING A VECTOR - multiplying it
+
+VELOCITY - the magnitude of the vector
+
+v1 = (2,2)-(5,4)
+v2 = (5,4)-(8,4)
+v3 = (7,6)-(13,8)
+
+Vector Dot Product
+Given two vectors in 3d space, the dot product between the two vectors is defined as the sum of the product of the corresponding components.  Or:
+V1 * V2 = x1x2 + y1y2 + z1z2
+The result of this will be a floating-point number
+This number represents the cosine of the angle between the two vectors.  this value will always fall between 0 and 180.  
