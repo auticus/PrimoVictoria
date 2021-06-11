@@ -123,7 +123,7 @@ namespace PrimoVictoria.UI.Cameras
         private int? GetUnitID(GameObject objectHit)
         {
             //order is very important here.  A stand uses a specific stand controller, which inherits from a UnitMeshController
-            return objectHit.tag == STAND_TAG ? GetStandsUnitID(objectHit) : GetModelMeshUnitID(objectHit);
+            return objectHit.CompareTag(STAND_TAG) ? GetStandsUnitID(objectHit) : GetModelMeshUnitID(objectHit);
         }
 
         private int? GetStandsUnitID(GameObject objectHit)

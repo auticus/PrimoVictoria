@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using PrimoVictoria.Models;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -13,6 +15,7 @@ namespace PrimoVictoria.Assets.Code.Controllers
     public class UIController : MonoBehaviour
     {
         public float DebugDurationSeconds = 10.0f;
+        public float WheelGizmoSeconds = 0.10f;
         public int DebugLineHeight = 5;
         public Vector3 SelectedUnitLocation;
         public Vector3 MouseClickPosition;
@@ -30,9 +33,9 @@ namespace PrimoVictoria.Assets.Code.Controllers
 
         private string _selectedUnitLocation => SelectedUnitLocation == Vector3.zero ? 
             "Selected Cmd Stand Location: <none>" : 
-            $"Selected Cmd Stand Location: {SelectedUnitLocation.ToString()}";
+            $"Selected Cmd Stand Location: {SelectedUnitLocation}";
 
-        private string _currentMouseClickPosition => $"Current Mouse Click Position:  {MouseClickPosition.ToString()}";
+        private string _currentMouseClickPosition => $"Current Mouse Click Position:  {MouseClickPosition}";
 
         /// <summary>
         /// Draws debug lines to the locations
@@ -48,6 +51,17 @@ namespace PrimoVictoria.Assets.Code.Controllers
                 var up = transform.TransformDirection(Vector3.up) * DebugLineHeight;
                 Debug.DrawRay(point, up, Color.red, DebugDurationSeconds);
             }
+        }
+
+        public void DrawWheelPoints(Unit unit)
+        {
+            if (!_isDevConsoleVisible) return;
+
+            //make sure gizmos button is pressed in game view or you wont see this
+            //the actual pivots will be blue
+            //the other pivots will be red
+            Debug.DrawRay(unit.GetUnitWheelPoint(Unit.WheelPointIndices.Left_UpperLeft), Vector3.up, Color.blue, WheelGizmoSeconds);
+            Debug.DrawRay(unit.GetUnitWheelPoint(Unit.WheelPointIndices.Right_UpperRight), Vector3.up, Color.blue, WheelGizmoSeconds);
         }
 
         private void Start()

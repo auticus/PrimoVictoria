@@ -21,11 +21,6 @@ namespace PrimoVictoria.Assets.Code.Models
         /// </summary>
         public Stand MiniatureStand { get; set; }
 
-        /// <summary>
-        /// What socket the miniature belongs to on a stand
-        /// </summary>
-        public StandSocket Socket { get; set; }
-
         public Miniature(GameObject mesh, UnitMeshController controller, Stand stand)
         {
             MiniatureMesh = mesh;

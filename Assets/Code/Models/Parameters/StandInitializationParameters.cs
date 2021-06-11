@@ -6,6 +6,7 @@ namespace PrimoVictoria.Assets.Code.Models.Parameters
 {
     public class StandInitializationParameters
     {
+        public int Index { get; }
         public Unit Parent { get; }
         public UnitData Data { get; }
         public Vector3 Location { get; }
@@ -15,9 +16,10 @@ namespace PrimoVictoria.Assets.Code.Models.Parameters
         public bool StandVisible { get; }
         public bool ModelMeshesVisible { get; }
 
-        public StandInitializationParameters(Unit parent, UnitData data, Vector3 location, Vector3 rotation, 
+        public StandInitializationParameters(int index, Unit parent, UnitData data, Vector3 location, Vector3 rotation, 
                                             int fileIndex, int rankIndex, bool standVisible, bool modelMeshesVisible)
         {
+            Index = index;
             Parent = parent;
             Data = data;
             Location = location;

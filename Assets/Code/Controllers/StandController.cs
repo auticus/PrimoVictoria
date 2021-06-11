@@ -6,6 +6,7 @@ using PrimoVictoria.Assets.Code.Models.Utilities;
 using PrimoVictoria.Models;
 using Unity.UNetWeaver;
 using UnityEngine;
+using UnityEngine.Profiling;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 
@@ -18,9 +19,9 @@ public class StandController : MonoBehaviour
     public Stand Stand;
     private bool _executingMovement;
 
-    private void Update()
+    private void FixedUpdate() //FixedUpdate is where anything moving physics objects should happen as it runs at a set 50 frames per second
     {
-        if ((Stand.ShouldMove || Stand.ShouldRotate) && !_executingMovement)
+        if ((Stand.ShouldMove || Stand.ShouldRotate || Stand.ShouldWheel) && !_executingMovement)
         {
             _executingMovement = true;
             StartCoroutine(MoveStand());
@@ -34,15 +35,23 @@ public class StandController : MonoBehaviour
 
     private IEnumerator MoveStand()
     {
-        while(Stand.ShouldRotate)
+        while (Stand.ShouldRotate)
         {
             RotateStandMesh();
             yield return null;
         }
 
+        while (Stand.ShouldWheel)
+        {
+            WheelStandMesh();
+            yield return null;
+        }
+
         while (Stand.ShouldMove)
         {
-            MoveStandMesh();
+            if (Stand.ManualMoving) ManualMoveStandMesh();
+            else AutoMoveStandMesh();
+
             yield return null;
         }
 
@@ -61,13 +70,13 @@ public class StandController : MonoBehaviour
 
         var xScale = Stand.MeshScale.x;
         var zScale = Stand.MeshScale.z;
-        var x = Stand.Position.x + (xScale / 2);
-        var y = Stand.Position.y;
-        var z = Stand.Position.z + (zScale / 2);
+        var x = Stand.Transform.position.x + (xScale / 2);
+        var y = Stand.Transform.position.y;
+        var z = Stand.Transform.position.z + (zScale / 2);
 
         var points = new[]
         {
-            new Vector3(Stand.Position.x,Stand.Position.y, Stand.Position.z),
+            new Vector3(Stand.Transform.position.x,Stand.Transform.position.y, Stand.Transform.position.z),
             new Vector3(x,y,z),
             new Vector3(-x, y, -z),
             new Vector3(-x, y, z),
@@ -82,9 +91,9 @@ public class StandController : MonoBehaviour
     {
         //sample the height where we are and bump us up so we aren't clipping through the terrain
         //removing this also makes the stand mesh do weird things when moving like ramp up and be dramatic when moving over bumps on the terrain
-        var pos = Stand.Position;
+        var pos = Stand.Transform.position;
         pos.y = GetHighestYCoordinate();
-        Stand.Position = pos; //PROBLEM - this is still not raising the piece up - and the Y is listed as higher than the terrain but the terrain is still clipping through
+        Stand.Transform.position = pos; //PROBLEM - this is still not raising the piece up - and the Y is listed as higher than the terrain but the terrain is still clipping through
     }
 
     /// <summary>
@@ -100,10 +109,27 @@ public class StandController : MonoBehaviour
         if (Stand.IsFacingDestination) Stand.StopRotating();
     }
 
-    private void MoveStandMesh()
+    private void AutoMoveStandMesh()
     {
-        var step = Stand.Speed * Time.deltaTime; //calculate the distance to move
-        Stand.Position = Vector3.MoveTowards(Stand.Position, Stand.Destination, step);
-        //Debug.Log($"Current Position={Stand.Position}::Destination = {Stand.Destination}::Registered Distance Left = {Stand.MoveDistance}::Step = {step}");
+        var step = Stand.Speed * Time.smoothDeltaTime; //calculate the distance to move
+        var newPosition = Vector3.MoveTowards(Stand.Transform.position, Stand.Destination, step);
+        Stand.Transform.position = newPosition;
+        //Debug.Log($"Stand: {Stand.FileIndex} :: Position: {newPosition} :: Step of Move: {step}");
+    }
+
+    private void ManualMoveStandMesh()
+    {
+        var step = Time.deltaTime * Stand.Speed;
+        Stand.Transform.Translate(Stand.Destination * step);
+    }
+
+    /// <summary>
+    /// Wheels the stand if needed
+    /// </summary>
+    private void WheelStandMesh()
+    {
+        //rotating rotates a stand around its center.  wheeling orbits a point
+        var direction = Stand.RotationDirection == Vector3.right ? Vector3.up : Vector3.up * -1;
+        Stand.Transform.RotateAround(Stand.WheelPivotPoint, direction, Stand.WheelSpeed * Time.deltaTime);
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using PrimoVictoria.Assets.Code.Controllers;
 using PrimoVictoria.Assets.Code.Models;
 using PrimoVictoria.Assets.Code.Models.Parameters;
+using PrimoVictoria.Assets.Code.Models.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using PrimoVictoria.Models;
@@ -24,6 +25,8 @@ namespace PrimoVictoria.Controllers
         public const string EXECUTE_BUTTON = "Input2";
         public const string WHEEL_LEFT = "WheelUnitLeft";
         public const string WHEEL_RIGHT = "WheelUnitRight";
+        public const string MOVE_UNIT_UP_DOWN = "MoveUnitUpDown";
+        public const string MOVE_UNIT_RIGHT_LEFT = "MoveUnitRightLeft";
 
         [SerializeField] List<UnitData> Faction_0_Units;
 
@@ -147,21 +150,19 @@ namespace PrimoVictoria.Controllers
 
             //IMPORTANT
             //the Game Manager instance in the editor will have had units added to it (which is why there is no code here adding any but we are referencing them)
-            
-            var unit = new GameObject("Men At Arms");
-            var exampleUnit = unit.AddComponent<Unit>();
-            unit.transform.parent = unitsCollection.transform;
+            var location = new Vector3(50, 0, 50);
 
-            var location = new Vector3(104.81f, 0.1f, 80.736f);
+            //rotation is based on the Y axis
             var rotation = new Vector3(0, 45, 0);
-            
-            exampleUnit.Data = Faction_0_Units[0];  //obviously we need to not hardcode this, its for setup testing only - requires that this element exist on the editor window
-            exampleUnit.ID = 1;
+            var unit =UnitFactory.BuildUnit(unitsCollection, "Men at Arms", 1, Faction_0_Units[0], location, rotation, stands: 1, standCountWidth: 1);
+            unit.ToggleDiagnostic(true);
 
-            var initializationParameters = new UnitInitializationParameters(unit, unitID:1, standCount:1, horizontalStandCount:1, location, rotation,
-                standVisible: true, modelMeshesVisible: true);
-
-            exampleUnit.InitializeUnit(initializationParameters);
+            /*
+            //UNIT 2
+            location = new Vector3(90.0f, 0.4f, 80.7f);
+            rotation = new Vector3(0,0,0);
+            UnitFactory.BuildUnit(unitsCollection, "Men At Arms 2", 2, Faction_0_Units[0], location, rotation, stands: 1, standCountWidth: 1);
+            */
         }
 
         private void HandleSelectedStandLocation(object sender, StandLocationArgs e)
@@ -239,23 +240,83 @@ namespace PrimoVictoria.Controllers
         /// </summary>
         private void HandleInputs()
         {
-            if (Input.GetButton(WHEEL_LEFT) && SelectedUnit != null)
+            if (SelectedUnit != null)
+                HandleSelectedUnitInputs();
+        }
+
+        private void HandleSelectedUnitInputs()
+        {
+            if (HandleSelectedUnitWheeling()) return;
+            if (HandleSelectedUnitMovement()) return;
+        }
+
+        private bool HandleSelectedUnitWheeling()
+        {
+            if (Input.GetButton(WHEEL_LEFT))
             {
                 SelectedUnit.Wheel(Vector3.left, isRunning: false);
-            }
-            else if (Input.GetButtonUp(WHEEL_LEFT) && SelectedUnit != null)
-            {
-                SelectedUnit.StopWheel();
+                _uiController.DrawWheelPoints(SelectedUnit);
+                return true;
             }
 
-            if (Input.GetButton(WHEEL_RIGHT) && SelectedUnit != null)
-            {
-                SelectedUnit.Wheel(Vector3.right, isRunning: false);
-            }
-            else if (Input.GetButtonUp(WHEEL_RIGHT) && SelectedUnit != null)
+            if (Input.GetButtonUp(WHEEL_LEFT))
             {
                 SelectedUnit.StopWheel();
+                return true;
             }
+
+            if (Input.GetButton(WHEEL_RIGHT))
+            {
+                SelectedUnit.Wheel(Vector3.right, isRunning: false);
+                _uiController.DrawWheelPoints(SelectedUnit);
+                return true;
+            }
+
+            if (Input.GetButtonUp(WHEEL_RIGHT))
+            {
+                SelectedUnit.StopWheel();
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleSelectedUnitMovement()
+        {
+            var xAxis = Input.GetAxis(MOVE_UNIT_RIGHT_LEFT);
+            var zAxis = Input.GetAxis(MOVE_UNIT_UP_DOWN);
+
+            if (Input.GetButtonUp(MOVE_UNIT_RIGHT_LEFT) || Input.GetButtonUp(MOVE_UNIT_UP_DOWN))
+            {
+                SelectedUnit.StopManualMove();
+                return true;
+            }
+
+            if (zAxis > 0)
+            {
+                SelectedUnit.ManualMove(Vector3.forward, isRunning: false);
+                return true;
+            }
+
+            if (zAxis < 0)
+            {
+                SelectedUnit.ManualMove(Vector3.forward * -1, isRunning: false);
+                return true;
+            }
+
+            if (xAxis > 0)
+            {
+                SelectedUnit.ManualMove(Vector3.right, isRunning: false);
+                return true;
+            }
+
+            if (xAxis < 0)
+            {
+                SelectedUnit.ManualMove(Vector3.right * -1, isRunning: false);
+                return true;
+            }
+
+            return false;
         }
     }
 }

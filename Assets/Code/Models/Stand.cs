@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System;
-using System.Linq;
 using PrimoVictoria.Assets.Code.Models;
 using PrimoVictoria.Assets.Code.Models.Parameters;
 using PrimoVictoria.Assets.Code.Models.Utilities;
@@ -8,6 +7,8 @@ using UnityEngine;
 using PrimoVictoria.Controllers;
 using PrimoVictoria.DataModels;
 using Debug = UnityEngine.Debug;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
 
 namespace PrimoVictoria.Models
 {
@@ -20,8 +21,6 @@ namespace PrimoVictoria.Models
         public Guid Id;
         public List<Miniature> Miniatures; //the warrior meshes and their controller
         public StandController StandController; //the stand's controller, part of the StandMesh but pulled out on initialization for performance reasons
-
-        public int StandCapacity;  //how many models fit on the stand at full capacity
 
         /// <summary>
         /// The default threshold to come within
@@ -51,7 +50,17 @@ namespace PrimoVictoria.Models
         /// </summary>
         public Vector3 UnitOffset;
 
-        public EventHandler<StandLocationArgs> OnLocationChanged;
+        /// <summary>
+        /// Based off of its current world position, the upper left point
+        /// </summary>
+        public Vector3 UpperLeftPoint => StandPosition.GetUpperPoint(this, StandPosition.StandPoint.UpperLeft);
+
+        /// <summary>
+        /// Based off of its current world position, the upper right point
+        /// </summary>
+        public Vector3 UpperRightPoint => StandPosition.GetUpperPoint(this, StandPosition.StandPoint.UpperRight);
+
+        public EventHandler<StandLocationArgs> OnSendLocationData;
 
         /// <summary>
         /// The size of the object's dimensions
@@ -59,13 +68,13 @@ namespace PrimoVictoria.Models
         public Vector3 MeshScale => Transform.localScale;
 
         /// <summary>
-        /// The distance between the Stand's current location and its final destination
+        /// The distance between the Stand's current location and its final destination if not manually moving
         /// </summary>
-        public float MoveDistance => Vector3.Distance(Destination, Transform.position);
+        public float MoveDistance => ManualMoving ? 0f : Vector3.Distance(Destination, Transform.position);
 
 
         /// <summary>
-        /// The location that the stand needs to travel to
+        /// The location that the stand needs to travel to or the direction it needs to take if manually moving
         /// </summary>
         public Vector3 Destination;
 
@@ -75,9 +84,9 @@ namespace PrimoVictoria.Models
         public Vector3 RotationDirection;
 
         /// <summary>
-        /// When TRUE, is not manual movement - user clicked somewhere and unit is moving there
+        /// When FALSE, is not manual movement - user clicked somewhere and unit is moving there, otherwise Manually Moving from input
         /// </summary>
-        public bool AutoMoving;
+        public bool ManualMoving;
 
         /// <summary>
         /// The stand's current rotation
@@ -86,15 +95,6 @@ namespace PrimoVictoria.Models
         {
             get => Transform.rotation;
             set => Transform.rotation = value;
-        }
-
-        /// <summary>
-        /// The stand's current position
-        /// </summary>
-        public Vector3 Position
-        {
-            get => Transform.position;
-            set => Transform.position = value;
         }
 
         /// <summary>
@@ -107,12 +107,17 @@ namespace PrimoVictoria.Models
         /// Flag that indicates if the Stand should perform a movement to reach its target destination
         /// </summary>
         /// <returns></returns>
-        public bool ShouldMove => Destination != Vector3.zero && MoveDistance > MOVE_THRESHOLD;
+        public bool ShouldMove => Destination != Vector3.zero && ((!ManualMoving && MoveDistance > MOVE_THRESHOLD) || ManualMoving);
 
         /// <summary>
         /// Returns TRUE if RotationDirection is not a zero vector
         /// </summary>
-        public bool ShouldRotate => RotationDirection != Vector3.zero;
+        public bool ShouldRotate => RotationDirection != Vector3.zero && WheelPivotPoint == Vector3.zero;
+
+        /// <summary>
+        /// Returns TRUE if the stand is Wheeling - that is it has a rotation direction and a wheeling pivot point set
+        /// </summary>
+        public bool ShouldWheel => RotationDirection != Vector3.zero && WheelPivotPoint != Vector3.zero;
         
         /// <summary>
         /// The transform of the pivot mesh itself, (not the Stand::GameObject)
@@ -125,13 +130,15 @@ namespace PrimoVictoria.Models
         public float Speed;
 
         public float WheelSpeed => _unitData.WheelSpeed;
+        public Vector3 WheelPivotPoint;
+
+        public bool DiagnosticsOn;
 
         private GameObject _mesh; //the mesh that is the stand that the models are standing on
         private bool _visible;  //if true will draw the stand that the models are on, if false will not (mostly useful for debugging / dev work)
         
         private bool _modelsVisible;  //if true will draw the model meshes on the stand.  If false, will only draw the stand
         private UnitData _unitData; //data pertinent to the unit overall
-        private List<StandSocket> _modelSockets;
 
         public void InitializeStand(StandInitializationParameters parms)
         {
@@ -157,7 +164,6 @@ namespace PrimoVictoria.Models
             var location = parms.Location + UnitOffset;
 
             InitializeStandMesh(ParentUnit, parms.Rotation, location, _visible);
-            CreateStandSockets();
             AddMiniaturesToStand(parms.Location, parms.Rotation);
         }
 
@@ -202,10 +208,25 @@ namespace PrimoVictoria.Models
             //the destination position passed was the point on the table clicked
             //for the pivot mesh (the #1 stand) this should be where its front touches so will need offset from its middle to its front
             //for every other mesh - a calculation of the point will need done to calculate where they need to move
-            AutoMoving = true;
+            ManualMoving = false;
             Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
             RotationDirection = StandMovePosition.GetDirectionToLookAtPoint(rawDestinationPosition, this, RankIndex, FileIndex);
             Destination = StandMovePosition.GetStandMovePosition(rawDestinationPosition, this, RankIndex, FileIndex);
+        }
+
+        public void ManualMove(Vector3 direction, bool isRunning)
+        {
+            ManualMoving = true;
+            Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
+            RotationDirection = Vector3.zero;
+            Destination = direction;
+        }
+
+        public void StopManualMove()
+        {
+            ManualMoving = false;
+            Destination = Vector3.zero;
+            RotationDirection = Vector3.zero;
         }
 
         /// <summary>
@@ -216,11 +237,16 @@ namespace PrimoVictoria.Models
         public void Wheel(Vector3 direction, bool isRunning)
         {
             //rotation in a wheel - the stands all will have the same facing 
-            AutoMoving = false;
+            ManualMoving = true;
             Destination = Vector3.zero; 
             Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
             RotationDirection = direction;
 
+            //we're going to rotate around a point and see what that does.  like a boss. - pick a point on the stand and rotate AROUND that
+            WheelPivotPoint = (direction == Vector3.right * -1) ? 
+                ParentUnit.GetUnitWheelPoint(Unit.WheelPointIndices.Left_UpperLeft) : 
+                ParentUnit.GetUnitWheelPoint(Unit.WheelPointIndices.Right_UpperRight);
+            
             //todo: the inner part of the wheel doesnt move
             //the outer stands move the furthest
         }
@@ -228,14 +254,26 @@ namespace PrimoVictoria.Models
         public void StopRotating()
         {
             RotationDirection = Vector3.zero;
+            WheelPivotPoint = Vector3.zero;
+        }
+
+        /// <summary>
+        /// Returns a new vector3 that is a copy of the current position
+        /// </summary>
+        /// <returns></returns>
+        public Vector3 CopyPosition()
+        {
+            return new Vector3(Transform.position.x, Transform.position.y, Transform.position.z);
         }
 
         #region Private Methods
 
         private void Update()
         {
-            var args = new StandLocationArgs(_mesh.transform.position, _modelSockets.Select(socket => socket.StandPosition).ToArray());
-            OnLocationChanged?.Invoke(this, args);
+            if (!DiagnosticsOn) return;
+
+            var args = new StandLocationArgs(Transform.position);
+            OnSendLocationData?.Invoke(this, args);
         }
 
         /// <summary>
@@ -311,13 +349,6 @@ namespace PrimoVictoria.Models
             StandController.Stand = this;
         }
 
-        private void CreateStandSockets()
-        {
-            _modelSockets = StandSocketFactory.CreateStandSocketsForStand(_mesh, ParentUnit.Data);
-
-            if (_modelSockets == null) Debug.LogWarning($"Stand for unit {_unitData.Name} failed to create modelSockets");
-        }
-
         private void AddMiniaturesToStand(Vector3 location, Vector3 rotation)
         {
             for (var i = 0; i < ParentUnit.Data.ModelsPerStand; i++)
@@ -334,26 +365,10 @@ namespace PrimoVictoria.Models
             var miniController = miniatureMesh.GetComponent<UnitMeshController>();
             var mini = new Miniature(miniatureMesh, miniController, this);
             Miniatures.Add(mini);
-            AssignEmptySocket(mini);
-
-            if (mini.Socket == null)
-            {
-                Debug.LogWarning("Mini has no empty stand socket to be placed in!");
-                return;
-            }
 
             miniController.ParentStand = this;
-            miniController.Socket = mini.Socket;
             miniatureMesh.transform.SetParent(ParentUnit.transform, worldPositionStays: false);
             miniatureMesh.SetActive(_modelsVisible);
-        }
-
-        private void AssignEmptySocket(Miniature mini)
-        {
-            var socket = _modelSockets.FirstOrDefault(p => p.Occupied == false);
-            if (socket == null) return;
-            mini.Socket = socket;
-            socket.Occupied = true;
         }
 
         #endregion Private Methods

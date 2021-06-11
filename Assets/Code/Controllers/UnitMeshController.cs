@@ -23,7 +23,7 @@ namespace PrimoVictoria.Controllers
         private Vector2 SmoothDeltaPosition = Vector2.zero;
         private Vector2 Velocity = Vector2.zero;
 
-        private float _movementThreshold = 0.9f; //when distance remaining <= this, stop moving
+        private readonly float _movementThreshold = 0.9f; //when distance remaining <= this, stop moving
 
         // Start is called before the first frame update
         protected void Start()
@@ -69,10 +69,8 @@ namespace PrimoVictoria.Controllers
 
         private void UpdatePosition()
         {
-            //Socket location is the local location so use transform.TransformPoint to convert from its local position to a world position
-            //Debug.Log($"Socket Local={Socket.StandPosition} :: Socket World={ParentStand.MeshTransform.transform.TransformPoint(Socket.StandPosition)} :: Stand World={ParentStand.MeshTransform.position}");
             transform.rotation = ParentStand.Rotation;
-            transform.position = ParentStand.TransformPoint(Socket.StandPosition); //weird offset of the model
+            transform.position = ParentStand.Transform.position;
         }
     }
 }

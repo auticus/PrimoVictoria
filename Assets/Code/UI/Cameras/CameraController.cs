@@ -7,7 +7,7 @@ namespace PrimoVictoria.UI.Cameras
     public class CameraController : MonoBehaviour
     {
         /*
-         * Movement defaults to the WASD keys as well as the arrow keys
+         * Movement defaults to the WASD keys
          * If mouse movement enabled, moving mouse to edge of screen will move the screen as well
          * Q & E will rotate the camera as will holding middle mouse button and moving the mouse
          * mouse wheel will zoom in and out
@@ -26,7 +26,7 @@ namespace PrimoVictoria.UI.Cameras
         [SerializeField] [Tooltip("How many units from edge of screen will trigger mouse movement")] private float MouseMoveBorderEdgeScreen = 10.0f;
         [SerializeField] private bool MouseMovementEnabled = true;
         [SerializeField] [Tooltip("Enable to have the speed of camera movement speed up the closer you get to the screen edge")] private bool MouseMoveAccelerationEnabled = true;
-        [SerializeField] [Tooltip("How far the camera can go in X or Y coordinates")] private Vector2 MapLimit = new Vector2(100, 100);
+        [SerializeField] [Tooltip("How far the camera can go in X or Y coordinates")] private Vector2 MapLimit = new Vector2(60, 60);
         [SerializeField] [Tooltip("The LayerMasks that represent the ground or anything else that can affect camera height")] private List<LayerMask> GroundMasks = new List<LayerMask>() { -1 };
 
         private Vector2 MouseAxis
@@ -81,9 +81,6 @@ namespace PrimoVictoria.UI.Cameras
             pos.x = Mathf.Clamp(pos.x, -MapLimit.x, MapLimit.x);
             pos.z = Mathf.Clamp(pos.z, -MapLimit.y, MapLimit.y);
             pos.y = Mathf.Clamp(pos.y, MinCameraZoom, MaxCameraZoom);
-
-            //m_Transform.position = Vector3.Lerp(m_Transform.position,
-            //new Vector3(m_Transform.position.x, targetHeight + difference, m_Transform.position.z), Time.deltaTime * heightDampening);
 
             transform.position = pos;
         }

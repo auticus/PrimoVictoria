@@ -10,21 +10,51 @@ pointing and clicking - it doesn't understand to stay in formation.  it doesn't 
 [ ] - wheel a whole unit moving (fun times)
 ---> wheel based off of a rotation click (right arrow / left arrow) (WheelUnitLeft / WheelUnitRight)
 ---> wheel based off of turning to face a point (right click)
---->[] Rotate changes
+--->[X] Rotate changes
 redoing standmoveposition - just returning a direction to rotate
 ------> something has to exist to either keep this vector in the direction it needs OR stop it
 ------> when complete the braces will rotate left and right, and right clicking should rotate the stand
 	to where it needs to go
 
-WHERE DID WE LEAVE OFF:  it knows to rotate when yuou right click but will always rotate. 
-need something to say stop rotating once we are facing the target
-Keyboard rotation works fine
+Wheeling - right now rotation goes around the center of the stand.  We need rotation to go from a corner
+Unit should be able to calculate its left and right wheel pivot point based on width of the front rank
 
-Wheeling - still have not touched this yet
+When wheeling - the initial wheel the center stand jumps out... why?  thats what causes it to be fucked
+also - the stands can snag on each other.  might want to turn physics off or whatever would cause them to touch like that
+
+InitializeUnit:  104.8, 0.1, 80.7
+
+Rotating it in place doesn't cause the jump
+Its ALWAYS when the unit first moves (even if rotating first (fine) then moving (jumps))
+
+Update 1: 104.8, 0.4, 80.7 step = 0.00402
+Update 2: 105.7, 0.3, 81.5 (+0.9, -0.1, +0.8) - step = 0.0194 this is the lurch or jump you see
+Update 3: 105.8, 0.3, 81.6 (+0.1, 0, +0.1) - step = 0.0046
+Update 8: 105.9, 0.3, 81.6 (+0.1, 0, 0) - step = 0.0054
+
+DeltaTime is a lot on that first frame and then evens out
+Record other stands for same 
+
+Both Stands record a move of 0.020 and then it slides to 0.0055
+
+Happens when there are multiple units - each unit has this happen (initial move jumps an entire unit and then smooths out)
+This only happens to stand #1 though.  Stand 2-x move fine!  (found via debug logs)
+
+So Time = 0.02 on initial and then falls to 0.002168 after
+Delta Time likely not the culprit.  The other stands are receiving the same delta time and dont jitter
+And when we hardcode delta time to be 0.002 it still jumps exactly the same
 =======================================
 
 KEY SHORTCUTS
 [ ] - rotate stands left & right
+up arrow, down arrow, left arrow, right arrow - will move a selected unit
+wasd - also moves the camera
+Camera Tilt up and down (c and v)
+Camera rotate (q and e)
+Developer Mode - F12
+LeftShift - stops rotation
+
+Right Mouse button - rotates and tilts camera when held
 
 
 Distance between two 3d points = pythagorum theorum

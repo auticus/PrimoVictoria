@@ -86,7 +86,10 @@ namespace PrimoVictoria.SelectionManager
             List<GameObject> returnList = new List<GameObject>();
             foreach (Transform transform in container)
             {
-                if (transform.gameObject.tag == tag) { returnList.Add(transform.gameObject); }
+                if (transform.gameObject.CompareTag(tag)) 
+                {
+                    returnList.Add(transform.gameObject);
+                }
             }
             return returnList.ToArray();
         }
