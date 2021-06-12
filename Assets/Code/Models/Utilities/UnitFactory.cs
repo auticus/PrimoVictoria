@@ -20,8 +20,8 @@ namespace PrimoVictoria.Assets.Code.Models.Utilities
                 horizontalStandCount: standCountWidth, 
                 unitLocation: location, 
                 rotation: rotation,
-                standVisible: false, 
-                modelMeshesVisible: true);
+                standVisible: false
+                );
 
             unitComponent.InitializeUnit(initializationParameters);
             return unitComponent;

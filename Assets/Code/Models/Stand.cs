@@ -19,22 +19,22 @@ namespace PrimoVictoria.Models
     {
         public Unit ParentUnit;
         public Guid Id;
-        public List<Miniature> Miniatures; //the warrior meshes and their controller
-        public StandController StandController; //the stand's controller, part of the StandMesh but pulled out on initialization for performance reasons
-
-        /// <summary>
-        /// The default threshold to come within
-        /// </summary>
-        public const float MOVE_THRESHOLD = 0.5f;
 
         /// <summary>
         /// The default angle rotation to come within on rotations
         /// </summary>
         public const float ROTATION_THRESHOLD = 12.0f;
 
-        public const float WHEEL_DEGREES = 10.0f;
+        /// <summary>
+        /// The mesh of the miniature itself
+        /// </summary>
+        public GameObject MiniatureMesh { get; set; }
 
-        
+        /// <summary>
+        /// The transform of the pivot mesh itself, (not the Stand::GameObject)
+        /// </summary>
+        public Transform Transform => MiniatureMesh.transform;
+
         /// <summary>
         /// What position in the unit footprint does this occupy (refer to unit documentation)
         /// </summary>
@@ -63,20 +63,13 @@ namespace PrimoVictoria.Models
         public EventHandler<StandLocationArgs> OnSendLocationData;
 
         /// <summary>
-        /// The size of the object's dimensions
-        /// </summary>
-        public Vector3 MeshScale => Transform.localScale;
-
-        /// <summary>
-        /// The distance between the Stand's current location and its final destination if not manually moving
-        /// </summary>
-        public float MoveDistance => ManualMoving ? 0f : Vector3.Distance(Destination, Transform.position);
-
-
-        /// <summary>
         /// The location that the stand needs to travel to or the direction it needs to take if manually moving
         /// </summary>
-        public Vector3 Destination;
+        public Vector3 Destination
+        {
+            get => _controller.Destination;
+            set => _controller.Destination = value;
+        }
 
         /// <summary>
         /// When not set to identity tells the stand to rotate in that direction its speed for that frame
@@ -104,27 +97,6 @@ namespace PrimoVictoria.Models
         private float LookDirectionToDestinationAngle => Vector3.Angle(Transform.forward, Destination - Transform.position);
 
         /// <summary>
-        /// Flag that indicates if the Stand should perform a movement to reach its target destination
-        /// </summary>
-        /// <returns></returns>
-        public bool ShouldMove => Destination != Vector3.zero && ((!ManualMoving && MoveDistance > MOVE_THRESHOLD) || ManualMoving);
-
-        /// <summary>
-        /// Returns TRUE if RotationDirection is not a zero vector
-        /// </summary>
-        public bool ShouldRotate => RotationDirection != Vector3.zero && WheelPivotPoint == Vector3.zero;
-
-        /// <summary>
-        /// Returns TRUE if the stand is Wheeling - that is it has a rotation direction and a wheeling pivot point set
-        /// </summary>
-        public bool ShouldWheel => RotationDirection != Vector3.zero && WheelPivotPoint != Vector3.zero;
-        
-        /// <summary>
-        /// The transform of the pivot mesh itself, (not the Stand::GameObject)
-        /// </summary>
-        public Transform Transform => _mesh.transform;
-
-        /// <summary>
         /// How fast the stand moves
         /// </summary>
         public float Speed;
@@ -134,11 +106,19 @@ namespace PrimoVictoria.Models
 
         public bool DiagnosticsOn;
 
-        private GameObject _mesh; //the mesh that is the stand that the models are standing on
         private bool _visible;  //if true will draw the stand that the models are on, if false will not (mostly useful for debugging / dev work)
         
-        private bool _modelsVisible;  //if true will draw the model meshes on the stand.  If false, will only draw the stand
         private UnitData _unitData; //data pertinent to the unit overall
+
+        private UnitMiniatureController _controller;
+
+        private void Update()
+        {
+            if (!DiagnosticsOn) return;
+
+            var args = new StandLocationArgs(Transform.position);
+            OnSendLocationData?.Invoke(this, args);
+        }
 
         public void InitializeStand(StandInitializationParameters parms)
         {
@@ -146,12 +126,8 @@ namespace PrimoVictoria.Models
             ParentUnit = parms.Parent;
             _unitData = parms.Data;
             _visible = parms.StandVisible;
-            _modelsVisible = parms.ModelMeshesVisible;
             FileIndex = parms.FileIndex;
             RankIndex = parms.RankIndex;
-
-            if (Miniatures == null) Miniatures = new List<Miniature>();
-            Miniatures.Clear();
 
             var pivotStand = ParentUnit.GetPivotStand();
             if (pivotStand == null)
@@ -163,8 +139,7 @@ namespace PrimoVictoria.Models
             UnitOffset = StandPosition.GetStandUnitOffset(pivotStand, parms.RankIndex, parms.FileIndex);
             var location = parms.Location + UnitOffset;
 
-            InitializeStandMesh(ParentUnit, parms.Rotation, location, _visible);
-            AddMiniaturesToStand(parms.Location, parms.Rotation);
+            AddMiniatureToStand(parms.Location, parms.Rotation);
         }
 
         public bool GetVisibility()
@@ -177,25 +152,9 @@ namespace PrimoVictoria.Models
             _visible = value;
         }
 
-        public bool GetModelVisibility()
-        {
-            return _modelsVisible;
-        }
-
-        public void SetModelVisibility(bool value)
-        {
-            _modelsVisible = value;
-        }
-
-        public Vector3 TransformPoint(Vector3 standPosition)
-        {
-            return _mesh.transform.TransformPoint(standPosition); //weird offset of the model
-        }
-
         public void Select(Projectors projectors, bool isFriendly)
         {
-            if (_visible) SelectStand(projectors, isFriendly);
-            else SelectModelMeshes(projectors, isFriendly);
+           SelectModelMesh(projectors, isFriendly);
         }
 
         /// <summary>
@@ -268,38 +227,16 @@ namespace PrimoVictoria.Models
 
         #region Private Methods
 
-        private void Update()
-        {
-            if (!DiagnosticsOn) return;
-
-            var args = new StandLocationArgs(Transform.position);
-            OnSendLocationData?.Invoke(this, args);
-        }
-
-        /// <summary>
-        /// Draws selection projector around the entire stand
-        /// </summary>
-        /// <param name="projectors"></param>
-        /// <param name="isFriendly"></param>
-        private void SelectStand(Projectors projectors, bool isFriendly)
-        {
-            var selectionObject = GetSelectionProjector(projectors, isFriendly);
-            selectionObject.transform.SetParent(_mesh.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the projector goes
-        }
-
         /// <summary>
         /// Draws selection projector around each model mesh
         /// </summary>
         /// <param name="projectors"></param>
         /// <param name="isFriendly"></param>
-        private void SelectModelMeshes(Projectors projectors, bool isFriendly)
+        private void SelectModelMesh(Projectors projectors, bool isFriendly)
         {
             //draw the projector prefab (the circle under the models) under the models
-            foreach (var mini in Miniatures)
-            {
-                var selectionObject = GetSelectionProjector(projectors, isFriendly);
-                selectionObject.transform.SetParent(mini.MiniatureMesh.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the circle goes
-            }
+            var selectionObject = GetSelectionProjector(projectors, isFriendly);
+            selectionObject.transform.SetParent(MiniatureMesh.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the circle goes
         }
 
         private GameObject GetSelectionProjector(Projectors projectors, bool isFriendly)
@@ -336,39 +273,19 @@ namespace PrimoVictoria.Models
 
             throw new Exception($"Invalid data state in Stand::GetActiveProjector");
         }
-
-        private void InitializeStandMesh(Unit parent, Vector3 rotation, Vector3 location, bool visible)
+        
+        private void AddMiniatureToStand(Vector3 location, Vector3 rotation)
         {
-            _mesh = Instantiate(original: _unitData.StandMesh, position: location, rotation: Quaternion.Euler(rotation));
-            
-            _mesh.transform.SetParent(parent.transform);
-            _mesh.GetComponent<MeshRenderer>().enabled = visible;
-
-            StandController = _mesh.GetComponent<StandController>();
-            StandController.ParentUnit = parent;
-            StandController.Stand = this;
-        }
-
-        private void AddMiniaturesToStand(Vector3 location, Vector3 rotation)
-        {
-            for (var i = 0; i < ParentUnit.Data.ModelsPerStand; i++)
-            {
-                //todo: first guy in will likely be a standard bearer mesh of some kind so not everything will just use the UnitMesh object here
-                //this will likely take the form of an enum or something explaining each element in the UnitMeshes list and what it really is
-                var miniatureMesh = Instantiate(original: _unitData.UnitMeshes[0], position: location, rotation: Quaternion.Euler(rotation));
-                SetMiniature(miniatureMesh);
-            }
+            var miniatureMesh = Instantiate(original: _unitData.UnitMeshes[0], position: location, rotation: Quaternion.Euler(rotation));
+            SetMiniature(miniatureMesh);
         }
 
         private void SetMiniature(GameObject miniatureMesh)
         {
-            var miniController = miniatureMesh.GetComponent<UnitMeshController>();
-            var mini = new Miniature(miniatureMesh, miniController, this);
-            Miniatures.Add(mini);
-
-            miniController.ParentStand = this;
+            _controller = miniatureMesh.GetComponent<UnitMiniatureController>();
+            _controller.Stand = this;
             miniatureMesh.transform.SetParent(ParentUnit.transform, worldPositionStays: false);
-            miniatureMesh.SetActive(_modelsVisible);
+            MiniatureMesh = miniatureMesh;
         }
 
         #endregion Private Methods

@@ -10,7 +10,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9bfa06fa663b33740bf97384850a0e6a, type: 3}
-  m_Name: 100k
+  m_Name: SandboxFaction
   m_EditorClassIdentifier: 
-  Name: 100 Kingdoms
-  RuleSystem: 1
+  Name: Sandbox Kingdom

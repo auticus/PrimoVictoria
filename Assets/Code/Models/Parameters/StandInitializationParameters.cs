@@ -14,10 +14,9 @@ namespace PrimoVictoria.Assets.Code.Models.Parameters
         public int FileIndex { get; }
         public int RankIndex { get; }
         public bool StandVisible { get; }
-        public bool ModelMeshesVisible { get; }
 
         public StandInitializationParameters(int index, Unit parent, UnitData data, Vector3 location, Vector3 rotation, 
-                                            int fileIndex, int rankIndex, bool standVisible, bool modelMeshesVisible)
+                                            int fileIndex, int rankIndex, bool standVisible)
         {
             Index = index;
             Parent = parent;
@@ -27,7 +26,6 @@ namespace PrimoVictoria.Assets.Code.Models.Parameters
             FileIndex = fileIndex;
             RankIndex = rankIndex;
             StandVisible = standVisible;
-            ModelMeshesVisible = modelMeshesVisible;
         }
     }
 }

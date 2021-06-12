@@ -28,16 +28,7 @@ namespace PrimoVictoria.UI.Cameras
         public EventHandler<Vector3> OnMouseOverTerrain { get;set; }
         public EventHandler<MouseClickGamePieceEventArgs> OnMouseOverGamePiece { get; set; }
 
-        private Camera view;
         private const int TERRAIN_LAYER = 8;
-        private const string STAND_TAG = "ModelStand"; //stand prefab objects are tagged with this
-        
-
-        // Start is called before the first frame update
-        private void Start()
-        {
-            view = Camera.main;
-        }
 
         // Update is called once per frame
         private void Update()
@@ -122,27 +113,10 @@ namespace PrimoVictoria.UI.Cameras
 
         private int? GetUnitID(GameObject objectHit)
         {
-            //order is very important here.  A stand uses a specific stand controller, which inherits from a UnitMeshController
-            return objectHit.CompareTag(STAND_TAG) ? GetStandsUnitID(objectHit) : GetModelMeshUnitID(objectHit);
-        }
-
-        private int? GetStandsUnitID(GameObject objectHit)
-        {
-            var standHit = objectHit.GetComponent<StandController>();
+            var standHit = objectHit.GetComponent<UnitMiniatureController>();
             if (standHit != null)
             {
                 return standHit.ParentUnit.ID;
-            }
-
-            return null;
-        }
-
-        private int? GetModelMeshUnitID(GameObject objectHit)
-        {
-            var unitHit = objectHit.GetComponent<UnitMeshController>(); //GameObject has to have a UnitMeshController script attached to it
-            if (unitHit != null)
-            {
-                return unitHit.UnitID;
             }
 
             return null;

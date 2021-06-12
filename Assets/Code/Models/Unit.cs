@@ -34,13 +34,16 @@ namespace PrimoVictoria.Models
         
         private List<Stand> _stands;
         private Stand _pivotStand;  //the central stand in the first rank
-        private Vector3 _pivotStandMeshScale; //how big the stand is
-        private GameObject _unit; //the owning game object
         private GameManager _gameManager;
         /// <summary>
         /// Left.UpperLeft, Left.UpperRight, Right.UpperLeft, Right.UpperRight position points of the unit
         /// </summary>
         private List<Vector3> WheelPoints;
+
+        private void Start()
+        {
+            _gameManager = FindObjectOfType<GameManager>();
+        }
 
         public void SetLocation(Vector3 location)
         {
@@ -48,18 +51,7 @@ namespace PrimoVictoria.Models
         }
 
         public Stand GetPivotStand() => _pivotStand;
-        /// <summary>
-        /// The location of the unit based on the position of its Pivot Stand
-        /// </summary>
-        /// <returns></returns>
-        public Vector3 GetLocation() => _pivotStand.Transform.position;
-
-        /// <summary>
-        /// The rotation of the unit based on its Pivot Stand
-        /// </summary>
-        /// <returns></returns>
-        public Quaternion GetRotation() => _pivotStand.Rotation;
-
+        
         /// <summary>
         /// Game Controller method which will set the meshes within the unit
         /// </summary>
@@ -67,7 +59,6 @@ namespace PrimoVictoria.Models
         {
             ID = parameters.UnitID;
             Name = parameters.Name;
-            _unit = parameters.ContainingGameObject;
             _stands = new List<Stand>();
 
             //initialize the stands in the unit
@@ -85,7 +76,7 @@ namespace PrimoVictoria.Models
                 }
 
                 var parms = new StandInitializationParameters(index: i+1, this, Data, parameters.UnitLocation, parameters.Rotation,
-                    fileIndex: file, rankIndex: row, parameters.StandVisible, parameters.ModelMeshesVisible);
+                    fileIndex: file, rankIndex: row, parameters.StandVisible);
                 var standModel = UnitFactory.BuildStand(parms);
                 _stands.Add(standModel);
 
@@ -93,7 +84,6 @@ namespace PrimoVictoria.Models
                 {
                     RegisterEvents(standModel); //first stand set its event up to track its location
                     _pivotStand = standModel;
-                    _pivotStandMeshScale = standModel.MeshScale;
                 }
             }
 
@@ -230,11 +220,6 @@ namespace PrimoVictoria.Models
             vectors.Add(rightMost.UpperRightPoint);
 
             return vectors;
-        }
-
-        private void Start()
-        {
-            _gameManager = FindObjectOfType<GameManager>();
         }
 
         private void RegisterEvents(Stand stand)

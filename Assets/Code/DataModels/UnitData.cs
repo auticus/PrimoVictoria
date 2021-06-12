@@ -12,7 +12,6 @@ namespace PrimoVictoria.DataModels
         public string Name = "New Unit Name";
         public Faction Faction;
         public UnitTypes UnitType = UnitTypes.Unknown;
-        public int ModelsPerStand;
         public UnitStatistics Statistics = new UnitStatistics();
         public List<SpecialRules> UnitSpecialRules = new List<SpecialRules>();
         public List<Equipment> UnitEquipment = new List<Equipment>();
@@ -21,11 +20,6 @@ namespace PrimoVictoria.DataModels
         /// The visual model(s) representing the warriors
         /// </summary>
         public List<GameObject> UnitMeshes; //todo: because multiples can be put here need some type of data element on this object that defines what each element index is (normal, standard, etc)
-
-        /// <summary>
-        /// The stand mesh that the models stand on
-        /// </summary>
-        public GameObject StandMesh;
 
         /// <summary>
         /// The size of the selection cursor under the solder mesh when the unit is selected
