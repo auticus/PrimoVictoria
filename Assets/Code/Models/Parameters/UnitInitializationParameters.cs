@@ -28,7 +28,7 @@ namespace PrimoVictoria.Assets.Code.Models.Parameters
 
         public UnitData Data { get; }
 
-        public UnitInitializationParameters(GameObject owner, int unitID, string name, UnitData data, 
+        public UnitInitializationParameters(int unitID, string name, UnitData data, 
             int standCount, int horizontalStandCount, Vector3 unitLocation, Vector3 rotation, bool standVisible)
         {
             StandCount = standCount;

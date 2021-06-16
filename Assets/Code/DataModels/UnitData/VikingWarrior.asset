@@ -10,12 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8d0a29d55c094fe4c8ffd78c1f055b5f, type: 3}
-  m_Name: 100k_MenAtArms
+  m_Name: VikingWarrior
   m_EditorClassIdentifier: 
-  Name: Men At Arms
+  Name: Viking Warrior
   Faction: {fileID: 11400000, guid: 1f090203333acee4ab7860efcecc89c8, type: 2}
   UnitType: 1
-  ModelsPerStand: 1
   Statistics:
     Movement: 5
     Volley: 1
@@ -29,8 +28,6 @@ MonoBehaviour:
   UnitEquipment: []
   UnitMeshes:
   - {fileID: 1176357143112116, guid: c2cf23cadbe7f9746ba6447ddf138ecc, type: 3}
-  StandMesh: {fileID: 8532922840266622005, guid: e833ca8b6ae8d4948a1b3c8673e874cd,
-    type: 3}
   SelectionInfantryOrthoSize: 0.7
   SelectionInfantryStandOrthoSize: 0.6
   WalkSpeed: 2

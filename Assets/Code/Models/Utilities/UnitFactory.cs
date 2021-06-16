@@ -7,15 +7,13 @@ namespace PrimoVictoria.Assets.Code.Models.Utilities
 {
     public static class UnitFactory
     {
-        public static Unit BuildUnit(GameObject owningCollection, string name, int unitID, UnitData data, Vector3 location, Vector3 rotation, int stands, int standCountWidth)
+        public static Unit BuildUnit(GameObject unitsCollection, string name, int unitID, UnitData data, Vector3 location, Vector3 rotation, int stands, int standCountWidth)
         {
-            var unit = new GameObject(name);
-            var unitComponent = unit.AddComponent<Unit>();
-            unit.transform.parent = owningCollection.transform;
+            var unitComponent = unitsCollection.AddComponent<Unit>();
             unitComponent.Data = data;  //obviously we need to not hardcode this, its for setup testing only - requires that this element exist on the editor window
             unitComponent.ID = unitID;
             
-            var initializationParameters = new UnitInitializationParameters(owner: unit, unitID, name, data, 
+            var initializationParameters = new UnitInitializationParameters(unitID, name, data, 
                 standCount: stands, 
                 horizontalStandCount: standCountWidth, 
                 unitLocation: location, 

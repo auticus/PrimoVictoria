@@ -22,8 +22,8 @@ namespace PrimoVictoria.Controllers
 
         //this is a bit of a circular reference
         public Stand Stand;
-        
-        public Unit ParentUnit => Stand?.ParentUnit;
+
+        public Unit ParentUnit => Stand == null ? null : Stand.ParentUnit;
 
         private bool _manualMoving;
         /// <summary>

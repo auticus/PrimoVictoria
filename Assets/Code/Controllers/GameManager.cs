@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using PrimoVictoria.Assets.Code;
 using PrimoVictoria.Assets.Code.Controllers;
 using PrimoVictoria.Assets.Code.Models;
-using PrimoVictoria.Assets.Code.Models.Parameters;
-using PrimoVictoria.Assets.Code.Models.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using PrimoVictoria.Models;
-using PrimoVictoria.DataModels;
-using PrimoVictoria.UI.Cameras;
 
 namespace PrimoVictoria.Controllers
 { 
@@ -18,7 +15,6 @@ namespace PrimoVictoria.Controllers
     public class GameManager : MonoBehaviour
     {
         public static GameManager instance = null;  //allows us to access the instance of this object from any other script
-        public Projectors Projectors; //collection of all Projectors
         
         public const string MESH_DECORATOR_TAG = "UnitMeshDecorator";
         public const string SELECT_BUTTON = "Input1"; //the name of the control set in bindings
@@ -28,43 +24,13 @@ namespace PrimoVictoria.Controllers
         public const string MOVE_UNIT_UP_DOWN = "MoveUnitUpDown";
         public const string MOVE_UNIT_RIGHT_LEFT = "MoveUnitRightLeft";
 
-        [SerializeField] List<UnitData> Faction_0_Units;
-
         private const string PRELOAD_SCENE = "Preload";
         private const string SANDBOX_SCENE = "Sandbox";
-        private const string UNITS_GAMEOBJECT = "Units";
+        public const string UNITS_GAMEOBJECT = "Units";
+        
+        private InputController _inputController; //all input-related commands go through this gameobject, public because needs set as a gameobject
+        private UnitController _unitController;
         private UIController _uiController; //the reference to the UIController (for things like the dev console etc)
-
-        private Unit _selectedUnit;
-        public Unit SelectedUnit
-        {
-            get => _selectedUnit;
-            set
-            {
-                if (_selectedUnit != null && value != null && _selectedUnit.ID == value.ID)
-                    return;
-
-                if (_selectedUnit != null)
-                {
-                    _selectedUnit.Unselect();
-                    _selectedUnit.OnLocationChanged -= HandleSelectedStandLocation;
-                }
-
-                _selectedUnit = value;
-
-                if (_selectedUnit != null)
-                {
-                    _selectedUnit.Select(Projectors,
-                        isFriendly: true); //todo: tell if friend or not and not hardcode it to always be friend
-
-                    _selectedUnit.OnLocationChanged += HandleSelectedStandLocation;
-                }
-                else
-                {
-                    _uiController.SelectedUnitLocation = Vector3.zero;
-                }
-            }
-        }
 
         private List<Vector3> _selectedUnitDestinations;
         public List<Vector3> SelectedUnitDestinations
@@ -90,11 +56,16 @@ namespace PrimoVictoria.Controllers
             InitGame();
         }
 
-        private void Update()
+        public void SetActiveUnit(Unit unit)
         {
-            HandleInputs();
+            _unitController.SetSelectedUnit(unit);
+
+            if (unit == null)
+            {
+                _uiController.SelectedUnitLocation = Vector3.zero;
+            }
         }
-    
+
         private void InitGame()
         {
             //initialize the game here
@@ -106,9 +77,9 @@ namespace PrimoVictoria.Controllers
                 SceneManager.LoadScene(SANDBOX_SCENE);
             }
 
-            SubscribeToGameEvents();
             SetGameObjectReferences();
-
+            SubscribeToControllerEvents();
+            
             var unitsCollection = GameObject.Find(UNITS_GAMEOBJECT);
 
             //add my Units collection if it doesn't already exist
@@ -116,207 +87,100 @@ namespace PrimoVictoria.Controllers
             {
                 unitsCollection = new GameObject(UNITS_GAMEOBJECT);
             }
-
-            LoadUnits(unitsCollection);
-        }
-
-        private void SubscribeToGameEvents()
-        {
-            var camera = GameObject.Find("/Main Camera");
-            if (!camera)
-            {
-                Debug.LogError("Main camera was not found!");
-                return;
-            }
-            var rayCaster = camera.GetComponent<CameraRaycaster>();
-            rayCaster.OnMouseOverGamePiece += MouseOverGamePiece;
-            rayCaster.OnMouseOverTerrain += MouseOverTerrain;
-            rayCaster.OnMouseClickOverGameBoard += MouseClickOverGameBoard;
+            
+            _unitController.LoadUnits(unitsCollection);
         }
 
         private void SetGameObjectReferences()
         {
-            _uiController = FindObjectOfType<UIController>();
+            _uiController = FindObjectOfType<UIController>(); //this controller sits on the UI Gameobject, not the gamemanager object
             if (_uiController == null)
             {
                 Debug.LogWarning("The game requires that the UIController component exist on the PrimoUI GameObject");
             }
+
+            _inputController = GetComponent<InputController>();
+            if (_inputController == null)
+            {
+                Debug.LogError("The game requires that the GameObject has an InputController component");
+            }
+
+            _unitController = GetComponent<UnitController>();
+            if (_unitController == null)
+            {
+                Debug.LogError("The game requires that the GameObject has a UnitController component");
+            }
         }
 
-        private void LoadUnits(GameObject unitsCollection)
+        #region Event Handlers
+        private void SubscribeToControllerEvents()
         {
-            //todo: this whole thing is hardcoded and is only for dev purposes, this will need redefined after development to not hardcode the unit types
-            //todo: a loading screen of some kind will populate what units are present, for right now this is just loaded with a test unit
+            //area where we will be subscribing to child controllers and passing their events to other controllers that need or care about them
+            _inputController.OnMouseClickOverGameBoard += MouseClickGameBoard;
+            _inputController.OnMouseClickOverGamePiece += MouseClickOverGamePiece;
+            _inputController.OnWheeling += UnitWheeling;
+            _inputController.OnStopWheeling += StopWheeling;
+            _inputController.OnStopManualMove += StopUnitManualMove;
+            _inputController.OnManualMove += UnitManualMove;
 
-            //IMPORTANT
-            //the Game Manager instance in the editor will have had units added to it (which is why there is no code here adding any but we are referencing them)
-            var location = new Vector3(50, 0, 50);
-
-            //rotation is based on the Y axis
-            var rotation = new Vector3(0, 45, 0);
-            var unit =UnitFactory.BuildUnit(unitsCollection, "Men at Arms", 1, Faction_0_Units[0], location, rotation, stands: 1, standCountWidth: 1);
-            unit.ToggleDiagnostic(true);
-
-            /*
-            //UNIT 2
-            location = new Vector3(90.0f, 0.4f, 80.7f);
-            rotation = new Vector3(0,0,0);
-            UnitFactory.BuildUnit(unitsCollection, "Men At Arms 2", 2, Faction_0_Units[0], location, rotation, stands: 1, standCountWidth: 1);
-            */
+            _unitController.OnSelectedUnitLocationChanged += SelectedUnitLocationChanged;
         }
 
-        private void HandleSelectedStandLocation(object sender, StandLocationArgs e)
-        {
-            _uiController.SelectedUnitLocation = e.StandLocation;
-        }
-
-        /// <summary>
-        /// This is fired off whenever the mouse moves over a game piece, and will also return if a button was clicked 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void MouseOverGamePiece(object sender, MouseClickGamePieceEventArgs e)
+        private void MouseClickOverGamePiece(object sender, MouseClickGamePieceEventArgs e)
         {
             if (e.Button == MouseClickEventArgs.MouseButton.Input1)
             {
                 //left-clicking on a unit will select that unit
-                SelectUnitMeshes(e.UnitID);
+                _unitController.SelectUnit(e.UnitID);
             }
             if (e.Button == MouseClickEventArgs.MouseButton.Input2)
             {
                 //right-clicking on a unit is the same as deselecting that unit
-                SelectedUnit = null;
+                SetActiveUnit(null);
             }
         }
 
-        private void MouseOverTerrain(object sender, Vector3 terrainCoordinates)
+        private void MouseClickGameBoard(object sender, MouseClickEventArgs e)
         {
-            throw new NotImplementedException("Mouse Over Terrain is not currently implemented");
-        }
+            _uiController.MouseClickPosition = e.WorldPosition;
 
-        /// <summary>
-        /// this will be captured whenever a mouse click has hit the game board itself and not one of the pieces or terrain structures
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void MouseClickOverGameBoard (object sender, MouseClickEventArgs e)
-        {
+            //left-clicking the gameboard unselects any saved units
+            //right-clicking the gameboard will attempt to move the selected unit to that point
             if (e.Button == MouseClickEventArgs.MouseButton.Input1)
             {
-                SelectedUnit = null;
+                SetActiveUnit(null);
             }
-            if (e.Button == MouseClickEventArgs.MouseButton.Input2 && SelectedUnit != null)
+            if (e.Button == MouseClickEventArgs.MouseButton.Input2)
             {
-                SelectedUnit.Move(e.WorldPosition, isRunning: false);
+                _unitController.MoveSelectedUnitToPoint(e.WorldPosition, isRunning: false);
             }
-
-            _uiController.MouseClickPosition = e.WorldPosition;
         }
 
-        private void SelectUnitMeshes(int unitID)
+        private void UnitWheeling(object sender, MovementArgs e)
         {
-            var unitsCollection = GameObject.Find(UNITS_GAMEOBJECT);
-
-            if (unitsCollection == null)
-                Debug.LogWarning("unitsCollection was NULL!");
-
-            var units = unitsCollection.GetComponentsInChildren(typeof(Unit), includeInactive: true);
-
-            if (units == null)
-                Debug.LogWarning("units component returned null!");
-
-            foreach (Unit unit in units)
-            {
-                if (unit.ID == unitID)
-                {
-                    SelectedUnit = unit;
-                    break;
-                }
-            }
+            _uiController.DrawWheelPoints(_unitController.SelectedUnit);
+            _unitController.UnitWheeling(e.Directions);
         }
 
-        /// <summary>
-        /// Handles Keyboard / controller inputs
-        /// </summary>
-        private void HandleInputs()
+        private void StopWheeling(object sender, EventArgs e)
         {
-            if (SelectedUnit != null)
-                HandleSelectedUnitInputs();
+            _unitController.StopWheeling();
         }
 
-        private void HandleSelectedUnitInputs()
+        private void UnitManualMove(object sender, MovementArgs e)
         {
-            if (HandleSelectedUnitWheeling()) return;
-            if (HandleSelectedUnitMovement()) return;
+            _unitController.ManualMove(e.Directions);
         }
 
-        private bool HandleSelectedUnitWheeling()
+        private void StopUnitManualMove(object sender, EventArgs e)
         {
-            if (Input.GetButton(WHEEL_LEFT))
-            {
-                SelectedUnit.Wheel(Vector3.left, isRunning: false);
-                _uiController.DrawWheelPoints(SelectedUnit);
-                return true;
-            }
-
-            if (Input.GetButtonUp(WHEEL_LEFT))
-            {
-                SelectedUnit.StopWheel();
-                return true;
-            }
-
-            if (Input.GetButton(WHEEL_RIGHT))
-            {
-                SelectedUnit.Wheel(Vector3.right, isRunning: false);
-                _uiController.DrawWheelPoints(SelectedUnit);
-                return true;
-            }
-
-            if (Input.GetButtonUp(WHEEL_RIGHT))
-            {
-                SelectedUnit.StopWheel();
-                return true;
-            }
-
-            return false;
+            _unitController.StopManualMove();
         }
 
-        private bool HandleSelectedUnitMovement()
+        private void SelectedUnitLocationChanged(object sender, StandLocationArgs e)
         {
-            var xAxis = Input.GetAxis(MOVE_UNIT_RIGHT_LEFT);
-            var zAxis = Input.GetAxis(MOVE_UNIT_UP_DOWN);
-
-            if (Input.GetButtonUp(MOVE_UNIT_RIGHT_LEFT) || Input.GetButtonUp(MOVE_UNIT_UP_DOWN))
-            {
-                SelectedUnit.StopManualMove();
-                return true;
-            }
-
-            if (zAxis > 0)
-            {
-                SelectedUnit.ManualMove(Vector3.forward, isRunning: false);
-                return true;
-            }
-
-            if (zAxis < 0)
-            {
-                SelectedUnit.ManualMove(Vector3.forward * -1, isRunning: false);
-                return true;
-            }
-
-            if (xAxis > 0)
-            {
-                SelectedUnit.ManualMove(Vector3.right, isRunning: false);
-                return true;
-            }
-
-            if (xAxis < 0)
-            {
-                SelectedUnit.ManualMove(Vector3.right * -1, isRunning: false);
-                return true;
-            }
-
-            return false;
+            _uiController.SelectedUnitLocation = e.StandLocation;
         }
+        #endregion
     }
 }
