@@ -22,11 +22,6 @@ namespace PrimoVictoria.DataModels
         public List<GameObject> UnitMeshes; //todo: because multiples can be put here need some type of data element on this object that defines what each element index is (normal, standard, etc)
 
         /// <summary>
-        /// The size of the selection cursor under the solder mesh when the unit is selected
-        /// </summary>
-        public double SelectionInfantryOrthoSize = 0.7;
-
-        /// <summary>
         /// The size of an infantry stand projector select
         /// </summary>
         public double SelectionInfantryStandOrthoSize = 1;

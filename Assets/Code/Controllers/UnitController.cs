@@ -20,6 +20,9 @@ namespace PrimoVictoria.Assets.Code.Controllers
         [SerializeField] Projectors Projectors; //collection of all Projectors
         [SerializeField] List<UnitData> Faction_0_Units;
 
+        private GameObject UnitsCollection { get; set; }
+        private const string UNITS_GAMEOBJECT = "Units";
+
         private Unit _selectedUnit;
         public Unit SelectedUnit
         {
@@ -52,7 +55,17 @@ namespace PrimoVictoria.Assets.Code.Controllers
                 }
             }
         }
-        public void LoadUnits(GameObject unitsCollection)
+
+        void Awake()
+        {
+            UnitsCollection = GameObject.Find(UNITS_GAMEOBJECT);
+            if (UnitsCollection == null)
+            {
+                UnitsCollection = new GameObject(UNITS_GAMEOBJECT) {layer = GameManager.MINIATURES_LAYER};
+            }
+        }
+
+        public void LoadUnits()
         {
             //todo: this whole thing is hardcoded and is only for dev purposes, this will need redefined after development to not hardcode the unit types
             //todo: a loading screen of some kind will populate what units are present, for right now this is just loaded with a test unit
@@ -63,7 +76,7 @@ namespace PrimoVictoria.Assets.Code.Controllers
 
             //rotation is based on the Y axis
             var rotation = new Vector3(0, 45, 0);
-            var unit = UnitFactory.BuildUnit(unitsCollection, "Men at Arms", 1, Faction_0_Units[0], 
+            var unit = UnitFactory.BuildUnit(UnitsCollection, "Men at Arms", 1, Faction_0_Units[0], 
                 location, rotation, stands: 5, standCountWidth: 5);
             unit.ToggleDiagnostic(true);
 
@@ -82,16 +95,14 @@ namespace PrimoVictoria.Assets.Code.Controllers
 
         public void SelectUnit(int unitID)
         {
-            var unitsCollection = GameObject.Find(GameManager.UNITS_GAMEOBJECT);
-
-            if (unitsCollection == null)
+            if (UnitsCollection == null)
             {
-                Debug.LogWarning("unitsCollection was NULL!");
+                Debug.LogWarning("UnitController::UnitsCollection was NULL!");
                 SelectedUnit = null;
                 return;
             }
 
-            SelectedUnit = GetSelectedUnit(unitsCollection, unitID);
+            SelectedUnit = GetSelectedUnit(UnitsCollection, unitID);
         }
 
         public void MoveSelectedUnitToPoint(Vector3 worldPosition, bool isRunning)

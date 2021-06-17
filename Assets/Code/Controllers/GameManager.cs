@@ -23,11 +23,12 @@ namespace PrimoVictoria.Controllers
         public const string WHEEL_RIGHT = "WheelUnitRight";
         public const string MOVE_UNIT_UP_DOWN = "MoveUnitUpDown";
         public const string MOVE_UNIT_RIGHT_LEFT = "MoveUnitRightLeft";
+        public const int TERRAIN_LAYER = 8;
+        public const int MINIATURES_LAYER = 9;
 
         private const string PRELOAD_SCENE = "Preload";
         private const string SANDBOX_SCENE = "Sandbox";
-        public const string UNITS_GAMEOBJECT = "Units";
-        
+
         private InputController _inputController; //all input-related commands go through this gameobject, public because needs set as a gameobject
         private UnitController _unitController;
         private UIController _uiController; //the reference to the UIController (for things like the dev console etc)
@@ -79,16 +80,7 @@ namespace PrimoVictoria.Controllers
 
             SetGameObjectReferences();
             SubscribeToControllerEvents();
-            
-            var unitsCollection = GameObject.Find(UNITS_GAMEOBJECT);
-
-            //add my Units collection if it doesn't already exist
-            if (unitsCollection == null)
-            {
-                unitsCollection = new GameObject(UNITS_GAMEOBJECT);
-            }
-            
-            _unitController.LoadUnits(unitsCollection);
+            _unitController.LoadUnits();
         }
 
         private void SetGameObjectReferences()
@@ -97,18 +89,21 @@ namespace PrimoVictoria.Controllers
             if (_uiController == null)
             {
                 Debug.LogWarning("The game requires that the UIController component exist on the PrimoUI GameObject");
+                throw new NullReferenceException("UI Controller is null");
             }
 
             _inputController = GetComponent<InputController>();
             if (_inputController == null)
             {
                 Debug.LogError("The game requires that the GameObject has an InputController component");
+                throw new NullReferenceException("Input Controller is null");
             }
 
             _unitController = GetComponent<UnitController>();
             if (_unitController == null)
             {
                 Debug.LogError("The game requires that the GameObject has a UnitController component");
+                throw new NullReferenceException("Unit Controller is null");
             }
         }
 

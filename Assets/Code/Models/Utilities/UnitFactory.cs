@@ -1,4 +1,5 @@
 ﻿using PrimoVictoria.Assets.Code.Models.Parameters;
+using PrimoVictoria.Controllers;
 using PrimoVictoria.DataModels;
 using PrimoVictoria.Models;
 using UnityEngine;
@@ -18,7 +19,7 @@ namespace PrimoVictoria.Assets.Code.Models.Utilities
                 horizontalStandCount: standCountWidth, 
                 unitLocation: location, 
                 rotation: rotation,
-                standVisible: false
+                standVisible: true
                 );
 
             unitComponent.InitializeUnit(initializationParameters);
@@ -27,7 +28,8 @@ namespace PrimoVictoria.Assets.Code.Models.Utilities
 
         public static Stand BuildStand(StandInitializationParameters parms)
         {
-            var stand = new GameObject($"Stand_{parms.Data.Name}_{parms.Index}");
+            var stand = new GameObject($"Stand_{parms.Data.Name}_{parms.Index}") {layer = GameManager.MINIATURES_LAYER};
+
             var standModel = stand.AddComponent<Stand>();
 
             stand.transform.SetParent(parms.Parent.transform);

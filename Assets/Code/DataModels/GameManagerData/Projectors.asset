@@ -12,10 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75282072f65a81447bfff58a8cfd53c1, type: 3}
   m_Name: Projectors
   m_EditorClassIdentifier: 
-  FriendlyCircleSelection: {fileID: 115082, guid: 16a019904df21f94ebadcb47c165a2f8,
+  FriendlySelection: {fileID: 6084812837164457895, guid: 320b0520dc26ab34d83198e37138b315,
     type: 3}
-  OtherCircleSelection: {fileID: 115082, guid: 539c1e6b552a392469ab188c7462f8de, type: 3}
-  FriendlySquareSelection: {fileID: 6084812837164457895, guid: 320b0520dc26ab34d83198e37138b315,
-    type: 3}
-  OtherSquareSelection: {fileID: 2591415757786064487, guid: 8ac19c51edb20a64ca629e67a2f59f61,
+  EnemySelection: {fileID: 2591415757786064487, guid: 8ac19c51edb20a64ca629e67a2f59f61,
     type: 3}

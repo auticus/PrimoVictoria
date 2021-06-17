@@ -70,12 +70,7 @@ namespace PrimoVictoria.Models
             get => _controller.Destination;
             set => _controller.Destination = value;
         }
-
-        /// <summary>
-        /// When not set to identity tells the stand to rotate in that direction its speed for that frame
-        /// </summary>
-        public Vector3 RotationDirection;
-
+        
         /// <summary>
         /// When FALSE, is not manual movement - user clicked somewhere and unit is moving there, otherwise Manually Moving from input
         /// </summary>
@@ -106,7 +101,7 @@ namespace PrimoVictoria.Models
 
         public bool DiagnosticsOn;
 
-        private bool _visible;  //if true will draw the stand that the models are on, if false will not (mostly useful for debugging / dev work)
+        private bool _visible; //whether or not the miniature is visible or not  
         
         private UnitData _unitData; //data pertinent to the unit overall
 
@@ -133,13 +128,12 @@ namespace PrimoVictoria.Models
             if (pivotStand == null)
             {
                 pivotStand = this; //the first time through there will be no pivot stand, which means THIS is the pivot stand
-                
             }
         
             UnitOffset = StandPosition.GetStandUnitOffset(pivotStand, parms.RankIndex, parms.FileIndex);
             var location = parms.Location + UnitOffset;
 
-            AddMiniatureToStand(parms.Location, parms.Rotation);
+            AddMiniatureToStand(location, parms.Rotation);
         }
 
         public bool GetVisibility()
@@ -169,15 +163,14 @@ namespace PrimoVictoria.Models
             //for every other mesh - a calculation of the point will need done to calculate where they need to move
             ManualMoving = false;
             Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
-            RotationDirection = StandMovePosition.GetDirectionToLookAtPoint(rawDestinationPosition, this, RankIndex, FileIndex);
             Destination = StandMovePosition.GetStandMovePosition(rawDestinationPosition, this, RankIndex, FileIndex);
+            //Debug.Log($"Stand {this.Id}: RankIndex {RankIndex}: FileIndex {FileIndex} :: Set to move to position {Destination}");
         }
 
         public void ManualMove(Vector3 direction, bool isRunning)
         {
             ManualMoving = true;
             Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
-            RotationDirection = Vector3.zero;
             Destination = direction;
         }
 
@@ -185,7 +178,6 @@ namespace PrimoVictoria.Models
         {
             ManualMoving = false;
             Destination = Vector3.zero;
-            RotationDirection = Vector3.zero;
         }
 
         /// <summary>
@@ -199,7 +191,6 @@ namespace PrimoVictoria.Models
             ManualMoving = true;
             Destination = Vector3.zero; 
             Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
-            RotationDirection = direction;
 
             //we're going to rotate around a point and see what that does.  like a boss. - pick a point on the stand and rotate AROUND that
             WheelPivotPoint = (direction == Vector3.right * -1) ? 
@@ -212,17 +203,7 @@ namespace PrimoVictoria.Models
 
         public void StopRotating()
         {
-            RotationDirection = Vector3.zero;
             WheelPivotPoint = Vector3.zero;
-        }
-
-        /// <summary>
-        /// Returns a new vector3 that is a copy of the current position
-        /// </summary>
-        /// <returns></returns>
-        public Vector3 CopyPosition()
-        {
-            return new Vector3(Transform.position.x, Transform.position.y, Transform.position.z);
         }
 
         #region Private Methods
@@ -236,12 +217,17 @@ namespace PrimoVictoria.Models
         {
             //draw the projector prefab (the circle under the models) under the models
             var selectionObject = GetSelectionProjector(projectors, isFriendly);
+            if (selectionObject == null) return;
+
             selectionObject.transform.SetParent(MiniatureMesh.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the circle goes
         }
 
         private GameObject GetSelectionProjector(Projectors projectors, bool isFriendly)
         {
             var projectorPrefab = GetActiveProjectorPrefab(projectors, isFriendly: isFriendly);
+
+            if (projectorPrefab == null) return null;
+
             var selectionObject = Instantiate(projectorPrefab);
             var projector = selectionObject.GetComponentInChildren<Projector>();
             projector.orthographicSize = GetProjectorOrthoSize();
@@ -257,8 +243,6 @@ namespace PrimoVictoria.Models
         {
             if (_visible && _unitData.UnitType == UnitTypes.Infantry)
                 return (float)_unitData.SelectionInfantryStandOrthoSize;
-            if (!_visible && _unitData.UnitType == UnitTypes.Infantry)
-                return (float)_unitData.SelectionInfantryOrthoSize;
 
             Debug.LogError($"Stand::GetProjectorOrthoSize encountered a unit type that is not currently supported - {_unitData.UnitType}");
             throw new ArgumentException($"Encountered Unit Type is not supported - {_unitData.UnitType}");
@@ -266,17 +250,16 @@ namespace PrimoVictoria.Models
 
         private GameObject GetActiveProjectorPrefab(Projectors projector, bool isFriendly)
         {
-            if (isFriendly && _visible) return projector.FriendlySquareSelection;
-            if (isFriendly) return projector.FriendlyCircleSelection;
-            if (!isFriendly && _visible) return projector.OtherSquareSelection;
-            if (!isFriendly) return projector.OtherCircleSelection;
+            if (_visible == false) return null;
+            if (isFriendly) return projector.FriendlySelection;
 
-            throw new Exception($"Invalid data state in Stand::GetActiveProjector");
+            return projector.EnemySelection;
         }
         
         private void AddMiniatureToStand(Vector3 location, Vector3 rotation)
         {
             var miniatureMesh = Instantiate(original: _unitData.UnitMeshes[0], position: location, rotation: Quaternion.Euler(rotation));
+            
             SetMiniature(miniatureMesh);
         }
 

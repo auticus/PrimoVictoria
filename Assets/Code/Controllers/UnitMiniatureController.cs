@@ -20,11 +20,9 @@ namespace PrimoVictoria.Controllers
         private Vector2 _smoothDeltaPosition = Vector2.zero;
         private Vector2 _velocity = Vector2.zero;
 
-        //this is a bit of a circular reference
-        public Stand Stand;
-
         public Unit ParentUnit => Stand == null ? null : Stand.ParentUnit;
-
+        public Stand Stand; //the stand that this miniature controller controls and represents
+        
         private bool _manualMoving;
         /// <summary>
         /// When TRUE - the gamepad or other input is moving this, not the nav agent

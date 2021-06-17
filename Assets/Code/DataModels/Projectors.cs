@@ -6,8 +6,6 @@
 [CreateAssetMenu(fileName = "New Projector Collection", menuName = "New Projector Collection", order = 4)]
 public class Projectors : ScriptableObject
 {
-    public GameObject FriendlyCircleSelection;
-    public GameObject OtherCircleSelection;
-    public GameObject FriendlySquareSelection;
-    public GameObject OtherSquareSelection;
+    public GameObject FriendlySelection;
+    public GameObject EnemySelection;
 }

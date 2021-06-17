@@ -46,10 +46,10 @@ Projector:
   m_AspectRatio: 1
   m_Orthographic: 1
   m_OrthographicSize: 0.7
-  m_Material: {fileID: 2100000, guid: 3b302088c262f4a468ddbd5d4ed4dcaf, type: 2}
+  m_Material: {fileID: 2100000, guid: 9c349ee1dd4b7774d9c324051f796786, type: 2}
   m_IgnoreLayers:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 768
 --- !u!1 &115082
 GameObject:
   m_ObjectHideFlags: 0
@@ -60,7 +60,7 @@ GameObject:
   m_Component:
   - component: {fileID: 489920}
   m_Layer: 0
-  m_Name: SelectionOtherProjector
+  m_Name: CircleSelectionFriendProjector
   m_TagString: UnitMeshDecorator
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

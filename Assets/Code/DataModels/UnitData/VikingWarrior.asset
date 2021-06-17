@@ -28,8 +28,7 @@ MonoBehaviour:
   UnitEquipment: []
   UnitMeshes:
   - {fileID: 1176357143112116, guid: c2cf23cadbe7f9746ba6447ddf138ecc, type: 3}
-  SelectionInfantryOrthoSize: 0.7
-  SelectionInfantryStandOrthoSize: 0.6
+  SelectionInfantryStandOrthoSize: 0.53
   WalkSpeed: 2
   RunSpeed: 5
   WheelSpeed: 40

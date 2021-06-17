@@ -1,5 +1,4 @@
-﻿using System;
-using PrimoVictoria.Models;
+﻿using PrimoVictoria.Models;
 using UnityEngine;
 
 namespace PrimoVictoria.Assets.Code.Models.Utilities
@@ -29,29 +28,6 @@ namespace PrimoVictoria.Assets.Code.Models.Utilities
             var truePosition = (mouseClickPosition + offset) - (stand.Transform.forward * distance);
 
             return truePosition;
-        }
-
-        /// <summary>
-        /// Calculates the direction required for the stand to turn to face the point given
-        /// </summary>
-        /// <returns></returns>
-        public static Vector3 GetDirectionToLookAtPoint(Vector3 mouseClickPosition, Stand stand, int rank, int file)
-        {
-            //the mouse clicked a position on the table.  the stand should move to this position but the FRONT of the stand needs to stop at this
-            //that means that the transform position needs to be adjusted so that it stops behind this point 
-            var offset = StandPosition.GetStandUnitOffset(stand, rank, file);
-
-            //the value that is had is the transform of the stand itself which is in the middle of the stand.  
-            //Offset that value back half the stand's height to get its true position
-            var distance = stand.Transform.localScale.x / 2;
-            var truePosition = (mouseClickPosition + offset) - (stand.Transform.forward * distance);
-            return WhichWayToTurn(truePosition, stand);
-        }
-
-        private static Vector3 WhichWayToTurn(Vector3 target, Stand stand)
-        {
-            var whichWay = Vector3.Cross(stand.Transform.forward, target - stand.Transform.position).y; //left or right?
-            return whichWay < 0 ? Vector3.left : Vector3.right;
         }
     }
 }

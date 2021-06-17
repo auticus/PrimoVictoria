@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &4191485637045355711
+--- !u!1 &105996
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,8 +8,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7574805264779364496}
-  - component: {fileID: 4181929404303163680}
+  - component: {fileID: 477530}
+  - component: {fileID: 11922136}
   m_Layer: 0
   m_Name: Projector
   m_TagString: Untagged
@@ -17,27 +17,27 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7574805264779364496
+--- !u!4 &477530
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4191485637045355711}
+  m_GameObject: {fileID: 105996}
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071067}
   m_LocalPosition: {x: 0, y: 0.72, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 5472982550270595451}
+  m_Father: {fileID: 489920}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!119 &4181929404303163680
+--- !u!119 &11922136
 Projector:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4191485637045355711}
+  m_GameObject: {fileID: 105996}
   m_Enabled: 1
   serializedVersion: 2
   m_NearClipPlane: 0
@@ -45,12 +45,12 @@ Projector:
   m_FieldOfView: 1
   m_AspectRatio: 1
   m_Orthographic: 1
-  m_OrthographicSize: 0.7
-  m_Material: {fileID: 2100000, guid: c634c7b7e8bf40545a5d257b1fa18ee1, type: 2}
+  m_OrthographicSize: 0.5
+  m_Material: {fileID: 2100000, guid: 3b302088c262f4a468ddbd5d4ed4dcaf, type: 2}
   m_IgnoreLayers:
     serializedVersion: 2
-    m_Bits: 256
---- !u!1 &6084812837164457895
+    m_Bits: 768
+--- !u!1 &115082
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -58,26 +58,26 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5472982550270595451}
+  - component: {fileID: 489920}
   m_Layer: 0
-  m_Name: SquareSelectionFriendProjector
+  m_Name: CircleSelectionOtherProjector
   m_TagString: UnitMeshDecorator
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5472982550270595451
+--- !u!4 &489920
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6084812837164457895}
+  m_GameObject: {fileID: 115082}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 7574805264779364496}
+  - {fileID: 477530}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
