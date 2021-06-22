@@ -148,7 +148,12 @@ namespace PrimoVictoria.Models
 
         public void Select(Projectors projectors, bool isFriendly)
         {
-           SelectModelMesh(projectors, isFriendly);
+           SelectModelMesh(projectors, isFriendly, ghost: false);
+        }
+
+        public void GhostSelect(Projectors projectors, bool isFriendly)
+        {
+            SelectModelMesh(projectors, isFriendly, ghost: true);
         }
 
         /// <summary>
@@ -213,16 +218,16 @@ namespace PrimoVictoria.Models
         /// </summary>
         /// <param name="projectors"></param>
         /// <param name="isFriendly"></param>
-        private void SelectModelMesh(Projectors projectors, bool isFriendly)
+        private void SelectModelMesh(Projectors projectors, bool isFriendly, bool ghost)
         {
             //draw the projector prefab (the circle under the models) under the models
-            var selectionObject = GetSelectionProjector(projectors, isFriendly);
+            var selectionObject = GetSelectionProjector(projectors, isFriendly, ghost);
             if (selectionObject == null) return;
 
             selectionObject.transform.SetParent(MiniatureMesh.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the circle goes
         }
 
-        private GameObject GetSelectionProjector(Projectors projectors, bool isFriendly)
+        private GameObject GetSelectionProjector(Projectors projectors, bool isFriendly, bool ghost)
         {
             var projectorPrefab = GetActiveProjectorPrefab(projectors, isFriendly: isFriendly);
 
@@ -231,6 +236,11 @@ namespace PrimoVictoria.Models
             var selectionObject = Instantiate(projectorPrefab);
             var projector = selectionObject.GetComponentInChildren<Projector>();
             projector.orthographicSize = GetProjectorOrthoSize();
+
+            //set the transparency depending on if we're ghosting or not
+            var falloff = ghost ? projectors.GhostSelectionTransparency : projectors.FullSelectionTransparency; //transparency value
+            var color = projector.material.color;
+            projector.material.color = new Color(color.r, color.g, color.b, falloff);
 
             return selectionObject;
         }

@@ -46,7 +46,7 @@ namespace PrimoVictoria.Controllers
 
         public void SetActiveUnit(Unit unit)
         {
-            _unitController.SetSelectedUnit(unit);
+            _unitController.Select(unit);
 
             if (unit == null)
             {
@@ -115,11 +115,12 @@ namespace PrimoVictoria.Controllers
                 case MouseClickEventArgs.MouseButton.None:
                 case MouseClickEventArgs.MouseButton.Input3:
                     //input 3 is currently not used, so if they are clicking on it, treat it like none
-                    //todo: make those sweet juicy projectors flow
+                    //we've moused over a game piece, we need to ghost-select it unless it is otherwise already selected
+                    _unitController.GhostSelect(e.UnitID);
                     break;
                 case MouseClickEventArgs.MouseButton.Input1:
                     //left-clicking on a unit will select that unit
-                    _unitController.SelectUnit(e.UnitID);
+                    _unitController.Select(e.UnitID);
                     break;
                 case MouseClickEventArgs.MouseButton.Input2:
                     //right-clicking on a unit is the same as deselecting that unit
@@ -134,6 +135,7 @@ namespace PrimoVictoria.Controllers
             
             //left-clicking the gameboard unselects any saved units
             //right-clicking the gameboard will attempt to move the selected unit to that point
+            //simply moving over the gameboard will deselect any ghost-selected units (units that have ghost icons under them indicating they were moused over)
             if (e.Button == MouseClickEventArgs.MouseButton.Input1)
             {
                 SetActiveUnit(null);
@@ -142,6 +144,8 @@ namespace PrimoVictoria.Controllers
             {
                 _unitController.MoveSelectedUnitToPoint(e.WorldPosition, isRunning: false);
             }
+
+            _unitController.ClearGhostSelect();
         }
 
         private void UnitWheeling(object sender, MovementArgs e)

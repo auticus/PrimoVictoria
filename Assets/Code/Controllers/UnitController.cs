@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using PrimoVictoria.Assets.Code.Models;
 using PrimoVictoria.Assets.Code.Utilities;
 using PrimoVictoria.Code.Utilities;
-using PrimoVictoria.Controllers;
 using PrimoVictoria.DataModels;
 using PrimoVictoria.Models;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
-namespace PrimoVictoria.Assets.Code.Controllers
+namespace PrimoVictoria.Controllers
 {
     /// <summary>
     /// Controller class that is responsible for issuing orders to the units in the game
@@ -25,6 +26,9 @@ namespace PrimoVictoria.Assets.Code.Controllers
         private const string UNITS_GAMEOBJECT = "Units";
 
         private Unit _selectedUnit;
+        /// <summary>
+        /// The current actively selected unit
+        /// </summary>
         public Unit SelectedUnit
         {
             get => _selectedUnit;
@@ -42,8 +46,7 @@ namespace PrimoVictoria.Assets.Code.Controllers
 
                 if (_selectedUnit != null)
                 {
-                    _selectedUnit.Select(Projectors,
-                        isFriendly: true); //todo: tell if friend or not and not hardcode it to always be friend
+                    _selectedUnit.Select(Projectors, isFriendly: true); //todo: tell if friend or not and not hardcode it to always be friend
 
                     _selectedUnit.OnLocationChanged += (sender, args) =>
                     {
@@ -53,6 +56,34 @@ namespace PrimoVictoria.Assets.Code.Controllers
                 else
                 {
                     OnSelectedUnitLocationChanged?.Invoke(this, new StandLocationArgs(Vector3.zero));
+                }
+            }
+        }
+
+        private Unit _ghostSelectedUnit;
+        /// <summary>
+        /// Unit that has a ghosted selection series underneath it
+        /// </summary>
+        public Unit GhostSelectedUnit
+        {
+            get => _ghostSelectedUnit;
+            private set
+            {
+                var nullUnit = value == null;
+                if (_ghostSelectedUnit != null && value != null && _ghostSelectedUnit.ID == value.ID)
+                {
+                    return;
+                }
+                if (_ghostSelectedUnit != null)
+                {
+                    _ghostSelectedUnit.Unselect();
+                }
+
+                _ghostSelectedUnit = value;
+
+                if (_ghostSelectedUnit != null)
+                {
+                    _ghostSelectedUnit.GhostSelect(Projectors, isFriendly: true);  //todo: remove hardcoded friendly
                 }
             }
         }
@@ -89,21 +120,44 @@ namespace PrimoVictoria.Assets.Code.Controllers
             */
         }
 
-        public void SetSelectedUnit(Unit unit)
+        /// <summary>
+        /// Selects the Unit passed in and draws projectors underneath it
+        /// </summary>
+        /// <param name="unit"></param>
+        public void Select(Unit unit)
         {
             SelectedUnit = unit;
         }
 
-        public void SelectUnit(int unitID)
+        /// <summary>
+        /// Selects a Unit based on the ID passed to it and draws projectors underneath it
+        /// </summary>
+        /// <param name="unitID"></param>
+        public void Select(int unitID)
         {
-            if (UnitsCollection == null)
-            {
-                Debug.LogWarning("UnitController::UnitsCollection was NULL!");
-                SelectedUnit = null;
-                return;
-            }
+            if (!UnitsCollectionIsValid()) return;
+            GhostSelectedUnit = null;
+            Select(GetSelectedUnit(UnitsCollection, unitID));
+        }
 
-            SelectedUnit = GetSelectedUnit(UnitsCollection, unitID);
+        /// <summary>
+        /// Will draw faded projectors underneath a unit (but not actually select it)
+        /// </summary>
+        /// <param name="unitID"></param>
+        public void GhostSelect(int unitID)
+        {
+            if (!UnitsCollectionIsValid()) return;
+            var unit = GetSelectedUnit(UnitsCollection, unitID);
+
+            if (SelectedUnit == null || unit.ID != SelectedUnit.ID)
+            {
+                GhostSelectedUnit = unit;
+            }
+        }
+
+        public void ClearGhostSelect()
+        {
+            GhostSelectedUnit = null;
         }
 
         public void MoveSelectedUnitToPoint(Vector3 worldPosition, bool isRunning)
@@ -143,6 +197,18 @@ namespace PrimoVictoria.Assets.Code.Controllers
         {
             if (SelectedUnit != null)
                 SelectedUnit.StopManualMove();
+        }
+
+        private bool UnitsCollectionIsValid()
+        {
+            if (UnitsCollection == null)
+            {
+                Debug.LogWarning("UnitController::UnitsCollection was NULL!");
+                SelectedUnit = null;
+                return false;
+            }
+
+            return true;
         }
 
         private Unit GetSelectedUnit(GameObject unitsCollection, int id)

@@ -16,3 +16,5 @@ MonoBehaviour:
     type: 3}
   EnemySelection: {fileID: 2591415757786064487, guid: 8ac19c51edb20a64ca629e67a2f59f61,
     type: 3}
+  GhostSelectionTransparency: 0.35
+  FullSelectionTransparency: 1

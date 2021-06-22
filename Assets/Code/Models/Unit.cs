@@ -106,10 +106,19 @@ namespace PrimoVictoria.Models
             }
         }
 
+        public void GhostSelect(Projectors projectors, bool isFriendly)
+        {
+            foreach (var stand in _stands)
+            {
+                stand.GhostSelect(projectors, isFriendly);
+            }
+        }
+
         public void Unselect()
         {
             //this may not be the best way to go about this but doing research, the performance shouldn't be bad since Unity keeps a list of all actual tagged objects
             //if performance is an issue, try keeping the projectors in an arraylist and just hit that
+            //we created a series of projectors around the meshes, now find them and destroy them
             var projectors = GameObject.FindGameObjectsWithTag(StaticResources.MESH_DECORATOR_TAG);
             foreach (var projector in projectors)
             {

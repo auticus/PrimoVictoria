@@ -8,4 +8,10 @@ public class Projectors : ScriptableObject
 {
     public GameObject FriendlySelection;
     public GameObject EnemySelection;
+
+    [Tooltip("The value of the transparency on a ghost select (1.0 is full opacity)")]
+    public float GhostSelectionTransparency;
+
+    [Tooltip("The value of the transparency on a full select (1.0 is full opacity)")]
+    public float FullSelectionTransparency;
 }

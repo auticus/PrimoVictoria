@@ -6,7 +6,7 @@ using PrimoVictoria.Controllers;
 using PrimoVictoria.UI.Cameras;
 using UnityEngine;
 
-namespace PrimoVictoria
+namespace PrimoVictoria.Controllers
 {
     /// <summary>
     /// Controller class that handles all player input and raises them up through events that subscribing controllers can care about
