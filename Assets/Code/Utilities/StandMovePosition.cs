@@ -1,7 +1,7 @@
 ﻿using PrimoVictoria.Models;
 using UnityEngine;
 
-namespace PrimoVictoria.Assets.Code.Models.Utilities
+namespace PrimoVictoria.Code.Utilities
 {
     /// <summary>
     /// Utility class to determine the actual world position of the stand when it moves

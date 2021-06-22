@@ -2,7 +2,7 @@
 using PrimoVictoria.Models;
 using UnityEngine;
 
-namespace PrimoVictoria.Assets.Code.Models.Utilities
+namespace PrimoVictoria.Code.Utilities
 {
     /// <summary>
     /// Utility class responsible for calculating the positions of a stand

@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using PrimoVictoria.Assets.Code.Models;
-using PrimoVictoria.Assets.Code.Models.Utilities;
+using PrimoVictoria.Assets.Code.Utilities;
+using PrimoVictoria.Code.Utilities;
 using PrimoVictoria.Controllers;
 using PrimoVictoria.DataModels;
 using PrimoVictoria.Models;
@@ -61,7 +62,7 @@ namespace PrimoVictoria.Assets.Code.Controllers
             UnitsCollection = GameObject.Find(UNITS_GAMEOBJECT);
             if (UnitsCollection == null)
             {
-                UnitsCollection = new GameObject(UNITS_GAMEOBJECT) {layer = GameManager.MINIATURES_LAYER};
+                UnitsCollection = new GameObject(UNITS_GAMEOBJECT) {layer = StaticResources.MINIATURES_LAYER};
             }
         }
 

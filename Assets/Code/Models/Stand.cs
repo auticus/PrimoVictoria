@@ -2,7 +2,7 @@
 using System;
 using PrimoVictoria.Assets.Code.Models;
 using PrimoVictoria.Assets.Code.Models.Parameters;
-using PrimoVictoria.Assets.Code.Models.Utilities;
+using PrimoVictoria.Code.Utilities;
 using UnityEngine;
 using PrimoVictoria.Controllers;
 using PrimoVictoria.DataModels;
@@ -241,11 +241,10 @@ namespace PrimoVictoria.Models
         /// <returns></returns>
         private float GetProjectorOrthoSize()
         {
-            if (_visible && _unitData.UnitType == UnitTypes.Infantry)
-                return (float)_unitData.SelectionInfantryStandOrthoSize;
+            if (_visible)
+                return _controller.AgentSize;
 
-            Debug.LogError($"Stand::GetProjectorOrthoSize encountered a unit type that is not currently supported - {_unitData.UnitType}");
-            throw new ArgumentException($"Encountered Unit Type is not supported - {_unitData.UnitType}");
+            return 0;
         }
 
         private GameObject GetActiveProjectorPrefab(Projectors projector, bool isFriendly)

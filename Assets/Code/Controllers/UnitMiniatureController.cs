@@ -61,6 +61,11 @@ namespace PrimoVictoria.Controllers
             set => _agent.speed = value;
         }
 
+        /// <summary>
+        /// how big the nav agent is
+        /// </summary>
+        public float AgentSize => _agent.radius;
+
         // Start is called before the first frame update
         protected void Start()
         {
@@ -77,6 +82,7 @@ namespace PrimoVictoria.Controllers
             }
             else
             {
+                UpdateNavAgent();
                 UpdateAnimator();
             }
         }
@@ -96,6 +102,13 @@ namespace PrimoVictoria.Controllers
         {
             //this requires the manual movement of the mesh 
 
+        }
+
+        private void UpdateNavAgent()
+        {
+            if (!_agent.hasPath) return;
+            if (_agent.remainingDistance > _agent.stoppingDistance) return;
+            _agent.ResetPath();
         }
 
         private void UpdateAnimator()

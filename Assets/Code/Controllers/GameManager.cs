@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using PrimoVictoria.Assets.Code;
 using PrimoVictoria.Assets.Code.Controllers;
 using PrimoVictoria.Assets.Code.Models;
+using PrimoVictoria.Assets.Code.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using PrimoVictoria.Models;
@@ -15,20 +16,6 @@ namespace PrimoVictoria.Controllers
     public class GameManager : MonoBehaviour
     {
         public static GameManager instance = null;  //allows us to access the instance of this object from any other script
-        
-        public const string MESH_DECORATOR_TAG = "UnitMeshDecorator";
-        public const string SELECT_BUTTON = "Input1"; //the name of the control set in bindings
-        public const string EXECUTE_BUTTON = "Input2";
-        public const string WHEEL_LEFT = "WheelUnitLeft";
-        public const string WHEEL_RIGHT = "WheelUnitRight";
-        public const string MOVE_UNIT_UP_DOWN = "MoveUnitUpDown";
-        public const string MOVE_UNIT_RIGHT_LEFT = "MoveUnitRightLeft";
-        public const int TERRAIN_LAYER = 8;
-        public const int MINIATURES_LAYER = 9;
-
-        private const string PRELOAD_SCENE = "Preload";
-        private const string SANDBOX_SCENE = "Sandbox";
-
         private InputController _inputController; //all input-related commands go through this gameobject, public because needs set as a gameobject
         private UnitController _unitController;
         private UIController _uiController; //the reference to the UIController (for things like the dev console etc)
@@ -73,9 +60,9 @@ namespace PrimoVictoria.Controllers
             var scene = SceneManager.GetActiveScene();
 
             //if you are running through the unity designer and have your sandbox or whatever running, the preload scene isn't running and this is coming from the sandbox's game manager object
-            if (scene.name == PRELOAD_SCENE)
+            if (scene.name == StaticResources.PRELOAD_SCENE)
             {               
-                SceneManager.LoadScene(SANDBOX_SCENE);
+                SceneManager.LoadScene(StaticResources.SANDBOX_SCENE);
             }
 
             SetGameObjectReferences();
@@ -111,8 +98,8 @@ namespace PrimoVictoria.Controllers
         private void SubscribeToControllerEvents()
         {
             //area where we will be subscribing to child controllers and passing their events to other controllers that need or care about them
-            _inputController.OnMouseClickOverGameBoard += MouseClickGameBoard;
-            _inputController.OnMouseClickOverGamePiece += MouseClickOverGamePiece;
+            _inputController.OnMouseOverGameBoard += MouseOverGameBoard;
+            _inputController.OnMouseOverGamePiece += MouseOverGamePiece;
             _inputController.OnWheeling += UnitWheeling;
             _inputController.OnStopWheeling += StopWheeling;
             _inputController.OnStopManualMove += StopUnitManualMove;
@@ -121,24 +108,30 @@ namespace PrimoVictoria.Controllers
             _unitController.OnSelectedUnitLocationChanged += SelectedUnitLocationChanged;
         }
 
-        private void MouseClickOverGamePiece(object sender, MouseClickGamePieceEventArgs e)
+        private void MouseOverGamePiece(object sender, MouseClickGamePieceEventArgs e)
         {
-            if (e.Button == MouseClickEventArgs.MouseButton.Input1)
+            switch (e.Button)
             {
-                //left-clicking on a unit will select that unit
-                _unitController.SelectUnit(e.UnitID);
-            }
-            if (e.Button == MouseClickEventArgs.MouseButton.Input2)
-            {
-                //right-clicking on a unit is the same as deselecting that unit
-                SetActiveUnit(null);
+                case MouseClickEventArgs.MouseButton.None:
+                case MouseClickEventArgs.MouseButton.Input3:
+                    //input 3 is currently not used, so if they are clicking on it, treat it like none
+                    //todo: make those sweet juicy projectors flow
+                    break;
+                case MouseClickEventArgs.MouseButton.Input1:
+                    //left-clicking on a unit will select that unit
+                    _unitController.SelectUnit(e.UnitID);
+                    break;
+                case MouseClickEventArgs.MouseButton.Input2:
+                    //right-clicking on a unit is the same as deselecting that unit
+                    SetActiveUnit(null);
+                    break;
             }
         }
 
-        private void MouseClickGameBoard(object sender, MouseClickEventArgs e)
+        private void MouseOverGameBoard(object sender, MouseClickEventArgs e)
         {
             _uiController.MouseClickPosition = e.WorldPosition;
-
+            
             //left-clicking the gameboard unselects any saved units
             //right-clicking the gameboard will attempt to move the selected unit to that point
             if (e.Button == MouseClickEventArgs.MouseButton.Input1)

@@ -4,7 +4,8 @@ using System.Linq;
 using System.Numerics;
 using PrimoVictoria.Assets.Code.Models;
 using PrimoVictoria.Assets.Code.Models.Parameters;
-using PrimoVictoria.Assets.Code.Models.Utilities;
+using PrimoVictoria.Assets.Code.Utilities;
+using PrimoVictoria.Code.Utilities;
 using UnityEngine;
 using PrimoVictoria.DataModels;
 using PrimoVictoria.Controllers;
@@ -109,7 +110,7 @@ namespace PrimoVictoria.Models
         {
             //this may not be the best way to go about this but doing research, the performance shouldn't be bad since Unity keeps a list of all actual tagged objects
             //if performance is an issue, try keeping the projectors in an arraylist and just hit that
-            var projectors = GameObject.FindGameObjectsWithTag(GameManager.MESH_DECORATOR_TAG);
+            var projectors = GameObject.FindGameObjectsWithTag(StaticResources.MESH_DECORATOR_TAG);
             foreach (var projector in projectors)
             {
                 Destroy(projector);

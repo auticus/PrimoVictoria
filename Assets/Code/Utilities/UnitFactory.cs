@@ -1,10 +1,11 @@
 ﻿using PrimoVictoria.Assets.Code.Models.Parameters;
+using PrimoVictoria.Assets.Code.Utilities;
 using PrimoVictoria.Controllers;
 using PrimoVictoria.DataModels;
 using PrimoVictoria.Models;
 using UnityEngine;
 
-namespace PrimoVictoria.Assets.Code.Models.Utilities
+namespace PrimoVictoria.Code.Utilities
 {
     public static class UnitFactory
     {
@@ -28,7 +29,7 @@ namespace PrimoVictoria.Assets.Code.Models.Utilities
 
         public static Stand BuildStand(StandInitializationParameters parms)
         {
-            var stand = new GameObject($"Stand_{parms.Data.Name}_{parms.Index}") {layer = GameManager.MINIATURES_LAYER};
+            var stand = new GameObject($"Stand_{parms.Data.Name}_{parms.Index}") {layer = StaticResources.MINIATURES_LAYER};
 
             var standModel = stand.AddComponent<Stand>();
 

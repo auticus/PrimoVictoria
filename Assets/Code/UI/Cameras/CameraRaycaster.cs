@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using PrimoVictoria.Assets.Code.Utilities;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using PrimoVictoria.Models;
@@ -24,7 +25,7 @@ namespace PrimoVictoria.UI.Cameras
         [SerializeField] Texture2D Unknown = null;
         #endregion Cursors
 
-        public EventHandler<MouseClickEventArgs> OnMouseClickOverGameBoard { get; set; }
+        public EventHandler<MouseClickEventArgs> OnMouseOverGameBoard { get; set; }
         public EventHandler<Vector3> OnMouseOverTerrain { get;set; }
         public EventHandler<MouseClickGamePieceEventArgs> OnMouseOverGamePiece { get; set; }
 
@@ -55,19 +56,28 @@ namespace PrimoVictoria.UI.Cameras
                 return;
 
             Cursor.SetCursor(NoUnit_Default, CursorHotspot, CursorMode.Auto);
-
-
+            
             if (!Physics.Raycast(ray, out RaycastHit hitInfo, DistanceToBackground))
                 return;
 
-            if (Input.GetButtonDown(GameManager.SELECT_BUTTON))
+            var button = MouseClickEventArgs.MouseButton.None;
+
+            if (Input.GetButtonDown(StaticResources.SELECT_BUTTON))
             {
-                OnMouseClickOverGameBoard?.Invoke(this, new MouseClickEventArgs() { ScreenPosition=Input.mousePosition, WorldPosition = hitInfo.point, Button = MouseClickEventArgs.MouseButton.Input1 });
+                button = MouseClickEventArgs.MouseButton.Input1;
             }
-            else if (Input.GetButtonDown(GameManager.EXECUTE_BUTTON))
+            else if (Input.GetButtonDown(StaticResources.EXECUTE_BUTTON))
             {
-                OnMouseClickOverGameBoard?.Invoke(this, new MouseClickEventArgs() { ScreenPosition = Input.mousePosition, WorldPosition = hitInfo.point, Button = MouseClickEventArgs.MouseButton.Input2 });
+                button = MouseClickEventArgs.MouseButton.Input2;
             }
+
+            OnMouseOverGameBoard?.Invoke(this,
+                new MouseClickEventArgs()
+                {
+                    ScreenPosition = Input.mousePosition, 
+                    WorldPosition = hitInfo.point,
+                    Button = button
+                });
         }
 
         /// <summary>
@@ -100,12 +110,12 @@ namespace PrimoVictoria.UI.Cameras
 
         private MouseClickEventArgs.MouseButton GetButton()
         {
-            if (Input.GetButtonDown(GameManager.EXECUTE_BUTTON))
+            if (Input.GetButtonDown(StaticResources.EXECUTE_BUTTON))
             {
                 return MouseClickEventArgs.MouseButton.Input2;
             }
 
-            if (Input.GetButtonDown(GameManager.SELECT_BUTTON))
+            if (Input.GetButtonDown(StaticResources.SELECT_BUTTON))
                 return MouseClickEventArgs.MouseButton.Input1;
 
             return MouseClickEventArgs.MouseButton.None;

@@ -21,11 +21,6 @@ namespace PrimoVictoria.DataModels
         /// </summary>
         public List<GameObject> UnitMeshes; //todo: because multiples can be put here need some type of data element on this object that defines what each element index is (normal, standard, etc)
 
-        /// <summary>
-        /// The size of an infantry stand projector select
-        /// </summary>
-        public double SelectionInfantryStandOrthoSize = 1;
-
         public float WalkSpeed = 2.0f;  //the navagent speed when walking (2.0 is an infantry man walk)
         public float RunSpeed = 5.0f;  //the navagent speed when running (5.0 is an infantry man run)
         public float WheelSpeed = 25.0f; //the speed multiplier when wheeling

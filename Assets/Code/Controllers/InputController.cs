@@ -1,16 +1,20 @@
 using System;
 using System.Collections.Generic;
 using PrimoVictoria.Assets.Code;
+using PrimoVictoria.Assets.Code.Utilities;
 using PrimoVictoria.Controllers;
 using PrimoVictoria.UI.Cameras;
 using UnityEngine;
 
 namespace PrimoVictoria
 {
+    /// <summary>
+    /// Controller class that handles all player input and raises them up through events that subscribing controllers can care about
+    /// </summary>
     public class InputController : MonoBehaviour
     {
-        public EventHandler<MouseClickEventArgs> OnMouseClickOverGameBoard;
-        public EventHandler<MouseClickGamePieceEventArgs> OnMouseClickOverGamePiece;
+        public EventHandler<MouseClickEventArgs> OnMouseOverGameBoard;
+        public EventHandler<MouseClickGamePieceEventArgs> OnMouseOverGamePiece; 
         public EventHandler<MovementArgs> OnWheeling;
         public EventHandler OnStopWheeling;
         public EventHandler<MovementArgs> OnManualMove;
@@ -51,7 +55,7 @@ namespace PrimoVictoria
             var rayCaster = camera.GetComponent<CameraRaycaster>();
             rayCaster.OnMouseOverGamePiece += MouseOverGamePiece;
             rayCaster.OnMouseOverTerrain += MouseOverTerrain;
-            rayCaster.OnMouseClickOverGameBoard += MouseClickOverGameBoard;
+            rayCaster.OnMouseOverGameBoard += MouseOverGameBoard;
         }
 
         /// <summary>
@@ -61,10 +65,7 @@ namespace PrimoVictoria
         /// <param name="e"></param>
         private void MouseOverGamePiece(object sender, MouseClickGamePieceEventArgs e)
         {
-            if (e.Button != MouseClickEventArgs.MouseButton.None)
-            {
-                OnMouseClickOverGamePiece?.Invoke(this, e);
-            }
+            OnMouseOverGamePiece?.Invoke(this, e);
         }
 
         private void MouseOverTerrain(object sender, Vector3 terrainCoordinates)
@@ -72,14 +73,9 @@ namespace PrimoVictoria
             throw new NotImplementedException("Mouse Over Terrain is not currently implemented");
         }
 
-        /// <summary>
-        /// this will be captured whenever a mouse click has hit the game board itself and not one of the pieces or terrain structures
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void MouseClickOverGameBoard(object sender, MouseClickEventArgs e)
+        private void MouseOverGameBoard(object sender, MouseClickEventArgs e)
         {
-            OnMouseClickOverGameBoard?.Invoke(this, e);
+            OnMouseOverGameBoard?.Invoke(this, e);
         }
         
         /// <summary>
@@ -88,7 +84,7 @@ namespace PrimoVictoria
         /// <returns></returns>
         private bool HandleWheeling()
         {
-            if (Input.GetButton(GameManager.WHEEL_LEFT))
+            if (Input.GetButton(StaticResources.WHEEL_LEFT))
             {
                 OnWheeling?.Invoke(this, new MovementArgs(new List<Vector3>()
                 {
@@ -97,13 +93,13 @@ namespace PrimoVictoria
                 return true;
             }
 
-            if (Input.GetButtonUp(GameManager.WHEEL_LEFT))
+            if (Input.GetButtonUp(StaticResources.WHEEL_LEFT))
             {
                 OnStopWheeling?.Invoke(this, EventArgs.Empty);
                 return true;
             }
 
-            if (Input.GetButton(GameManager.WHEEL_RIGHT))
+            if (Input.GetButton(StaticResources.WHEEL_RIGHT))
             {
                 OnWheeling?.Invoke(this, new MovementArgs(new List<Vector3>()
                 {
@@ -112,7 +108,7 @@ namespace PrimoVictoria
                 return true;
             }
             
-            if (Input.GetButtonUp(GameManager.WHEEL_RIGHT))
+            if (Input.GetButtonUp(StaticResources.WHEEL_RIGHT))
             {
                 OnStopWheeling?.Invoke(this, EventArgs.Empty);
                 return true;
@@ -123,10 +119,10 @@ namespace PrimoVictoria
 
         private bool HandleManualMovement()
         {
-            var xAxis = Input.GetAxis(GameManager.MOVE_UNIT_RIGHT_LEFT);
-            var zAxis = Input.GetAxis(GameManager.MOVE_UNIT_UP_DOWN);
+            var xAxis = Input.GetAxis(StaticResources.MOVE_UNIT_RIGHT_LEFT);
+            var zAxis = Input.GetAxis(StaticResources.MOVE_UNIT_UP_DOWN);
 
-            if (Input.GetButtonUp(GameManager.MOVE_UNIT_RIGHT_LEFT) || Input.GetButtonUp(GameManager.MOVE_UNIT_UP_DOWN))
+            if (Input.GetButtonUp(StaticResources.MOVE_UNIT_RIGHT_LEFT) || Input.GetButtonUp(StaticResources.MOVE_UNIT_UP_DOWN))
             {
                 OnStopManualMove?.Invoke(this, EventArgs.Empty);
                 return true;
