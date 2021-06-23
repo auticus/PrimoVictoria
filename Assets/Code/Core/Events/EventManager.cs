@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -9,47 +10,9 @@ namespace PrimoVictoria.Core.Events
     /// </summary>
     public class EventManager : MonoBehaviour
     {
-        private IEventQueue<EventArgs> _emptyArgsQueue;
-        private IEventQueue<MouseClickEventArgs> _mouseClickQueue;
-        private IEventQueue<MouseClickGamePieceEventArgs> _mouseClickGamePieceQueue;
-        private IEventQueue<MovementArgs> _movementQueue;
-        private IEventQueue<StandLocationArgs> _standLocationQueue;
-        private IEventQueue<UserInterfaceArgs> _userInterfaceQueue;
+        private static readonly Dictionary<Type, object> queues = new Dictionary<Type, object>();
 
-        private static EventManager _eventManager;
-
-        public static EventManager Instance
-        {
-            get
-            {
-                if (_eventManager == null)
-                {
-                    _eventManager = FindObjectOfType(typeof(EventManager)) as EventManager;
-                    if (_eventManager == null)
-                    {
-                        Debug.LogError("An event manager must be active on a GameObject in the scene");
-                    }
-                    else
-                    {
-                        _eventManager.Init();
-                    }
-                }
-
-                return _eventManager;
-            }
-        }
-
-        private void Init()
-        {
-            _emptyArgsQueue = new EventQueue<EventArgs>();
-            _mouseClickQueue = new EventQueue<MouseClickEventArgs>();
-            _mouseClickGamePieceQueue = new EventQueue<MouseClickGamePieceEventArgs>();
-            _movementQueue = new EventQueue<MovementArgs>();
-            _standLocationQueue = new EventQueue<StandLocationArgs>();
-            _userInterfaceQueue = new EventQueue<UserInterfaceArgs>();
-        }
-
-        public static void Subscribe<T>(PrimoEvents e, Action<T> listener)
+        public static void Subscribe<T>(PrimoEvents e, Action<T> listener) where T: EventArgs
         {
             if (!IsValidType<T>(e))
             {
@@ -61,28 +24,30 @@ namespace PrimoVictoria.Core.Events
             queue.Subscribe(e, listener);
         }
 
-        public static void CancelSubscription<T>(PrimoEvents e, Action<T> listener)
+        public static void CancelSubscription<T>(PrimoEvents e, Action<T> listener) where T: EventArgs
         {
             var queue = GetQueue<T>();
             queue.CancelSubscription(e, listener);
         }
 
-        public static void Publish<T>(PrimoEvents e, T args)
+        public static void Publish<T>(PrimoEvents e, T args) where T: EventArgs
         {
             var queue = GetQueue<T>();
             queue.Publish(e, args);
         }
 
-        private static IEventQueue<T> GetQueue<T>()
+        private static IEventQueue<T> GetQueue<T>() where T: EventArgs
         {
-            if (typeof(T) == typeof(MouseClickEventArgs)) return Instance._mouseClickQueue as IEventQueue<T>;
-            if (typeof(T) == typeof(MouseClickGamePieceEventArgs)) return Instance._mouseClickGamePieceQueue as IEventQueue<T>;
-            if (typeof(T) == typeof(MovementArgs)) return Instance._movementQueue as IEventQueue<T>;
-            if (typeof(T) == typeof(StandLocationArgs)) return Instance._standLocationQueue as IEventQueue<T>;
-            if (typeof(T) == typeof(EventArgs)) return Instance._emptyArgsQueue as IEventQueue<T>;
-            if (typeof(T) == typeof(UserInterfaceArgs)) return Instance._userInterfaceQueue as IEventQueue<T>;
-
-            throw new ArgumentException($"The type {typeof(T)} passed is not a valid queue in the EventManager");
+            if (queues.TryGetValue(typeof(T), out var queue))
+            {
+                return queue as IEventQueue<T>;
+            }
+            else
+            {
+                var newQueue = new EventQueue<T>();
+                queues.Add(typeof(T), newQueue);
+                return newQueue;
+            }
         }
 
         private static bool IsValidType<T>(PrimoEvents e)
