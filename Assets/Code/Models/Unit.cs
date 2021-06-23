@@ -32,7 +32,8 @@ namespace PrimoVictoria.Models
         public int ID;
         public string Name;
         public EventHandler<StandLocationArgs> OnLocationChanged;
-        
+        public UnitFormation Formation { get; set; }
+
         private List<Stand> _stands;
         private Stand _pivotStand;  //the central stand in the first rank
         private GameManager _gameManager;
@@ -40,6 +41,11 @@ namespace PrimoVictoria.Models
         /// Left.UpperLeft, Left.UpperRight, Right.UpperLeft, Right.UpperRight position points of the unit
         /// </summary>
         private List<Vector3> WheelPoints;
+
+        void Awake()
+        {
+            Formation = new UnitFormation { type = UnitFormation.FormationType.RankAndFile, FullRank = 5, Spacing = 1 };
+        }
 
         private void Start()
         {
@@ -77,7 +83,7 @@ namespace PrimoVictoria.Models
                 }
 
                 var parms = new StandInitializationParameters(index: i+1, this, Data, parameters.UnitLocation, parameters.Rotation,
-                    fileIndex: file, rankIndex: row, parameters.StandVisible);
+                    fileIndex: file, rankIndex: row, standVisible: parameters.StandVisible, spacing: Formation.Spacing);
                 var standModel = UnitFactory.BuildStand(parms);
                 _stands.Add(standModel);
 
@@ -137,7 +143,7 @@ namespace PrimoVictoria.Models
             var destinations = new List<Vector3>();
             foreach (var stand in _stands)
             {
-                stand.Move(pivotMeshRawPosition, isRunning);
+                stand.Move(pivotMeshRawPosition, isRunning, Formation);
                 destinations.Add(stand.Destination);
             }
 

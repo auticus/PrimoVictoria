@@ -51,14 +51,14 @@ namespace PrimoVictoria.Models
         public Vector3 UnitOffset;
 
         /// <summary>
-        /// Based off of its current world position, the upper left point
+        /// Based off of its current world position, the upper left point of the base
         /// </summary>
-        public Vector3 UpperLeftPoint => StandPosition.GetUpperPoint(this, StandPosition.StandPoint.UpperLeft);
+        public Vector3 UpperLeftPoint => RankAndFilePosition.GetUpperPoint(this, RankAndFilePosition.StandPoint.UpperLeft);
 
         /// <summary>
-        /// Based off of its current world position, the upper right point
+        /// Based off of its current world position, the upper right point of the base
         /// </summary>
-        public Vector3 UpperRightPoint => StandPosition.GetUpperPoint(this, StandPosition.StandPoint.UpperRight);
+        public Vector3 UpperRightPoint => RankAndFilePosition.GetUpperPoint(this, RankAndFilePosition.StandPoint.UpperRight);
 
         public EventHandler<StandLocationArgs> OnSendLocationData;
 
@@ -130,7 +130,7 @@ namespace PrimoVictoria.Models
                 pivotStand = this; //the first time through there will be no pivot stand, which means THIS is the pivot stand
             }
         
-            UnitOffset = StandPosition.GetStandUnitOffset(pivotStand, parms.RankIndex, parms.FileIndex);
+            UnitOffset = RankAndFilePosition.GetPosition(pivotStand, parms.RankIndex, parms.FileIndex, parms.Spacing);
             var location = parms.Location + UnitOffset;
 
             AddMiniatureToStand(location, parms.Rotation);
@@ -161,15 +161,14 @@ namespace PrimoVictoria.Models
         /// </summary>
         /// <param name="rawDestinationPosition">the point on the table that the mouse was clicked and the pivot stand will move to.</param>
         /// <param name="isRunning"></param>
-        public void Move(Vector3 rawDestinationPosition, bool isRunning)
+        public void Move(Vector3 rawDestinationPosition, bool isRunning, UnitFormation formation)
         {
             //the destination position passed was the point on the table clicked
             //for the pivot mesh (the #1 stand) this should be where its front touches so will need offset from its middle to its front
             //for every other mesh - a calculation of the point will need done to calculate where they need to move
             ManualMoving = false;
             Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
-            Destination = StandMovePosition.GetStandMovePosition(rawDestinationPosition, this, RankIndex, FileIndex);
-            //Debug.Log($"Stand {this.Id}: RankIndex {RankIndex}: FileIndex {FileIndex} :: Set to move to position {Destination}");
+            Destination = RankAndFilePosition.CalculateMovePosition(rawDestinationPosition, this, RankIndex, FileIndex, formation.Spacing);
         }
 
         public void ManualMove(Vector3 direction, bool isRunning)

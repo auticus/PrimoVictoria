@@ -69,7 +69,6 @@ namespace PrimoVictoria.Controllers
             get => _ghostSelectedUnit;
             private set
             {
-                var nullUnit = value == null;
                 if (_ghostSelectedUnit != null && value != null && _ghostSelectedUnit.ID == value.ID)
                 {
                     return;
