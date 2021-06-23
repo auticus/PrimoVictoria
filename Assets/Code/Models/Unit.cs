@@ -1,16 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
-using PrimoVictoria.Assets.Code.Models;
-using PrimoVictoria.Assets.Code.Models.Parameters;
-using PrimoVictoria.Assets.Code.Utilities;
-using PrimoVictoria.Code.Utilities;
 using UnityEngine;
 using PrimoVictoria.DataModels;
 using PrimoVictoria.Controllers;
-using Quaternion = UnityEngine.Quaternion;
-using Vector3 = UnityEngine.Vector3;
+using PrimoVictoria.Models.Parameters;
+using PrimoVictoria.Utilities;
 
 namespace PrimoVictoria.Models
 {

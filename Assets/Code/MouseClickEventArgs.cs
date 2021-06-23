@@ -1,7 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using PrimoVictoria.Models;
-using PrimoVictoria.Controllers;
 
 namespace PrimoVictoria
 {

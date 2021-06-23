@@ -2,7 +2,7 @@
 using PrimoVictoria.Models;
 using UnityEngine;
 
-namespace PrimoVictoria.Assets.Code.Models.Parameters
+namespace PrimoVictoria.Models.Parameters
 {
     public class StandInitializationParameters
     {

@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
-using PrimoVictoria.Assets.Code.Utilities;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using PrimoVictoria.Models;
 using PrimoVictoria.Controllers;
-using Debug = UnityEngine.Debug;
+using PrimoVictoria.Utilities;
 
 namespace PrimoVictoria.UI.Cameras
 {
@@ -21,8 +18,8 @@ namespace PrimoVictoria.UI.Cameras
         #region Cursors
         [SerializeField] Texture2D NoUnit_Default = null; //no unit is selected, mouse over no units
         [SerializeField] Texture2D NoUnit_Friendly = null; //no unit is selected, mouse over friendly 
-        [SerializeField] Texture2D NoUnit_Enemy = null; //no unit is selected, mouse is over an enemy
-        [SerializeField] Texture2D Unknown = null;
+        //[SerializeField] Texture2D NoUnit_Enemy = null; //no unit is selected, mouse is over an enemy  (remove comment when using)
+        //[SerializeField] Texture2D Unknown = null;
         #endregion Cursors
 
         public EventHandler<MouseClickEventArgs> OnMouseOverGameBoard { get; set; }

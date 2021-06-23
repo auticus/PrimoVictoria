@@ -2,12 +2,12 @@
 using PrimoVictoria.Models;
 using UnityEngine;
 
-namespace PrimoVictoria.Code.Utilities
+namespace PrimoVictoria.Utilities
 {
     /// <summary>
     /// Utility class responsible for calculating the positions of a stand in relation to the other stands in the unit
     /// </summary>
-    public class RankAndFilePosition
+    public class RankAndFilePosition 
     {
         /// <summary>
         /// Which point of the square base this operation refers to

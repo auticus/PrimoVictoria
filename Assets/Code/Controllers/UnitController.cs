@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using PrimoVictoria.Assets.Code.Models;
-using PrimoVictoria.Assets.Code.Utilities;
-using PrimoVictoria.Code.Utilities;
 using PrimoVictoria.DataModels;
 using PrimoVictoria.Models;
+using PrimoVictoria.Utilities;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
 
 namespace PrimoVictoria.Controllers
 {

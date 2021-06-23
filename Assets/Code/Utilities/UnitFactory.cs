@@ -1,11 +1,9 @@
-﻿using PrimoVictoria.Assets.Code.Models.Parameters;
-using PrimoVictoria.Assets.Code.Utilities;
-using PrimoVictoria.Controllers;
-using PrimoVictoria.DataModels;
+﻿using PrimoVictoria.DataModels;
 using PrimoVictoria.Models;
+using PrimoVictoria.Models.Parameters;
 using UnityEngine;
 
-namespace PrimoVictoria.Code.Utilities
+namespace PrimoVictoria.Utilities
 {
     public static class UnitFactory
     {

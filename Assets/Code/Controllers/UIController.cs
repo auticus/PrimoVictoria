@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using PrimoVictoria.Models;
 using TMPro;
-using UnityEditor;
 using UnityEngine;
 
-namespace PrimoVictoria.Assets.Code.Controllers
+namespace PrimoVictoria.Controllers
 {
     /// <summary>
     /// Controller that manages User Interface elements

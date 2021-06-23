@@ -1,7 +1,7 @@
 ﻿using PrimoVictoria.DataModels;
 using UnityEngine;
 
-namespace PrimoVictoria.Assets.Code.Models.Parameters
+namespace PrimoVictoria.Models.Parameters
 {
     public struct UnitInitializationParameters
     {

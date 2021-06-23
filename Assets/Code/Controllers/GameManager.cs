@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using PrimoVictoria.Assets.Code;
-using PrimoVictoria.Assets.Code.Controllers;
-using PrimoVictoria.Assets.Code.Models;
-using PrimoVictoria.Assets.Code.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using PrimoVictoria.Models;
+using PrimoVictoria.Utilities;
 
 namespace PrimoVictoria.Controllers
 { 

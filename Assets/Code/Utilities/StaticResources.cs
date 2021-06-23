@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PrimoVictoria.Assets.Code.Utilities
+namespace PrimoVictoria.Utilities
 {
     /// <summary>
     /// A class that holds static resources shared by multiple objects throughout the solution
