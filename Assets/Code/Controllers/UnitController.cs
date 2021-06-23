@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using PrimoVictoria.Core.Events;
 using PrimoVictoria.DataModels;
 using PrimoVictoria.Models;
 using PrimoVictoria.Utilities;
@@ -13,8 +14,6 @@ namespace PrimoVictoria.Controllers
     /// </summary>
     public class UnitController : MonoBehaviour
     {
-        public EventHandler<StandLocationArgs> OnSelectedUnitLocationChanged;
-
         [SerializeField] Projectors Projectors; //collection of all Projectors
         [SerializeField] List<UnitData> Faction_0_Units;
 
@@ -36,6 +35,7 @@ namespace PrimoVictoria.Controllers
                 if (_selectedUnit != null)
                 {
                     _selectedUnit.Unselect();
+                    _selectedUnit.ToggleDiagnostic(false);
                 }
 
                 _selectedUnit = value;
@@ -43,15 +43,11 @@ namespace PrimoVictoria.Controllers
                 if (_selectedUnit != null)
                 {
                     _selectedUnit.Select(Projectors, isFriendly: true); //todo: tell if friend or not and not hardcode it to always be friend
-
-                    _selectedUnit.OnLocationChanged += (sender, args) =>
-                    {
-                        OnSelectedUnitLocationChanged?.Invoke(sender, args);
-                    };
+                    _selectedUnit.ToggleDiagnostic(true);
                 }
                 else
                 {
-                    OnSelectedUnitLocationChanged?.Invoke(this, new StandLocationArgs(Vector3.zero));
+                    EventManager.Publish(PrimoEvents.SelectedUnitLocationChanged, new StandLocationArgs(Vector3.zero));
                 }
             }
         }
@@ -90,9 +86,27 @@ namespace PrimoVictoria.Controllers
             {
                 UnitsCollection = new GameObject(UNITS_GAMEOBJECT) {layer = StaticResources.MINIATURES_LAYER};
             }
+
+            SubscribeToEventManager();
         }
 
-        public void LoadUnits()
+        private void SubscribeToEventManager()
+        {
+            EventManager.Subscribe<MouseClickEventArgs>(PrimoEvents.MouseOverGameBoard, MouseOverGameBoard);
+            EventManager.Subscribe<MouseClickGamePieceEventArgs>(PrimoEvents.MouseOverGamePiece, MouseOverGamePiece);
+            EventManager.Subscribe<MovementArgs>(PrimoEvents.UnitWheeling, UnitWheeling);
+            EventManager.Subscribe<EventArgs>(PrimoEvents.StopWheeling, StopWheeling);
+            EventManager.Subscribe<EventArgs>(PrimoEvents.StopManualMove, StopUnitManualMove);
+            EventManager.Subscribe<MovementArgs>(PrimoEvents.UnitManualMove, UnitManualMove);
+            EventManager.Subscribe<EventArgs>(PrimoEvents.InitializeGame, InitializeController);
+        }
+
+        private void InitializeController(EventArgs e)
+        {
+            LoadUnits();
+        }
+
+        private void LoadUnits()
         {
             //todo: this whole thing is hardcoded and is only for dev purposes, this will need redefined after development to not hardcode the unit types
             //todo: a loading screen of some kind will populate what units are present, for right now this is just loaded with a test unit
@@ -103,9 +117,9 @@ namespace PrimoVictoria.Controllers
 
             //rotation is based on the Y axis
             var rotation = new Vector3(0, 45, 0);
-            var unit = UnitFactory.BuildUnit(UnitsCollection, "Men at Arms", 1, Faction_0_Units[0], 
+            var unit = UnitFactory.BuildUnit(UnitsCollection, "Men at Arms", 1, Faction_0_Units[0],
                 location, rotation, stands: 5, standCountWidth: 5);
-            unit.ToggleDiagnostic(true);
+            unit.ToggleDiagnostic(false);
 
             /*
             //UNIT 2
@@ -119,7 +133,7 @@ namespace PrimoVictoria.Controllers
         /// Selects the Unit passed in and draws projectors underneath it
         /// </summary>
         /// <param name="unit"></param>
-        public void Select(Unit unit)
+        private void Select(Unit unit)
         {
             SelectedUnit = unit;
         }
@@ -128,7 +142,7 @@ namespace PrimoVictoria.Controllers
         /// Selects a Unit based on the ID passed to it and draws projectors underneath it
         /// </summary>
         /// <param name="unitID"></param>
-        public void Select(int unitID)
+        private void Select(int unitID)
         {
             if (!UnitsCollectionIsValid()) return;
             GhostSelectedUnit = null;
@@ -139,7 +153,7 @@ namespace PrimoVictoria.Controllers
         /// Will draw faded projectors underneath a unit (but not actually select it)
         /// </summary>
         /// <param name="unitID"></param>
-        public void GhostSelect(int unitID)
+        private void GhostSelect(int unitID)
         {
             if (!UnitsCollectionIsValid()) return;
             var unit = GetSelectedUnit(UnitsCollection, unitID);
@@ -150,18 +164,18 @@ namespace PrimoVictoria.Controllers
             }
         }
 
-        public void ClearGhostSelect()
+        private void ClearGhostSelect()
         {
             GhostSelectedUnit = null;
         }
 
-        public void MoveSelectedUnitToPoint(Vector3 worldPosition, bool isRunning)
+        private void MoveSelectedUnitToPoint(Vector3 worldPosition, bool isRunning)
         {
             if (SelectedUnit != null)
                 SelectedUnit.Move(worldPosition, isRunning: isRunning);
         }
 
-        public void UnitWheeling(IEnumerable<Vector3> e)
+        private void UnitWheeling(IEnumerable<Vector3> e)
         {
             if (SelectedUnit == null) return;
             var directions = e.ToArray();
@@ -174,13 +188,13 @@ namespace PrimoVictoria.Controllers
             SelectedUnit.Wheel(directions[0], isRunning: false);
         }
 
-        public void StopWheeling()
+        private void StopWheeling()
         {
             if (SelectedUnit != null)
                 SelectedUnit.StopWheel();
         }
 
-        public void ManualMove(IEnumerable<Vector3> e)
+        private void ManualMove(IEnumerable<Vector3> e)
         {
             if (SelectedUnit == null) return;
             var directions = e.ToArray();
@@ -188,7 +202,7 @@ namespace PrimoVictoria.Controllers
             SelectedUnit.ManualMove(directions[0], isRunning: false);
         }
 
-        public void StopManualMove()
+        private void StopManualMove()
         {
             if (SelectedUnit != null)
                 SelectedUnit.StopManualMove();
@@ -225,6 +239,75 @@ namespace PrimoVictoria.Controllers
             }
 
             return null;
+        }
+
+        private void MouseOverGamePiece(MouseClickGamePieceEventArgs e)
+        {
+            switch (e.Button)
+            {
+                case MouseClickEventArgs.MouseButton.None:
+                case MouseClickEventArgs.MouseButton.Input3:
+                    //input 3 is currently not used, so if they are clicking on it, treat it like none
+                    //we've moused over a game piece, we need to ghost-select it unless it is otherwise already selected
+                    GhostSelect(e.UnitID);
+                    break;
+                case MouseClickEventArgs.MouseButton.Input1:
+                    //left-clicking on a unit will select that unit
+                    Select(e.UnitID);
+                    break;
+                case MouseClickEventArgs.MouseButton.Input2:
+                    //right-clicking on a unit is the same as deselecting that unit
+                    SetActiveUnit(null);
+                    break;
+            }
+        }
+
+        private void MouseOverGameBoard(MouseClickEventArgs e)
+        {
+            //left-clicking the gameboard unselects any saved units
+            //right-clicking the gameboard will attempt to move the selected unit to that point
+            //simply moving over the gameboard will deselect any ghost-selected units (units that have ghost icons under them indicating they were moused over)
+            if (e.Button == MouseClickEventArgs.MouseButton.Input1)
+            {
+                SetActiveUnit(null);
+            }
+            if (e.Button == MouseClickEventArgs.MouseButton.Input2)
+            {
+                MoveSelectedUnitToPoint(e.WorldPosition, isRunning: false);
+            }
+
+            ClearGhostSelect();
+        }
+
+        private void SetActiveUnit(Unit unit)
+        {
+            Select(unit);
+
+            if (unit == null)
+            {
+                EventManager.Publish(PrimoEvents.SelectedUnitLocationChanged, new StandLocationArgs(Vector3.zero));
+            }
+        }
+
+        private void UnitWheeling(MovementArgs e)
+        {
+            EventManager.Publish(PrimoEvents.UserInterfaceChange, new UserInterfaceArgs(SelectedUnit, UserInterfaceArgs.UserInterfaceCommand.DrawWheelPoints));
+            UnitWheeling(e.Directions);
+        }
+
+        private void StopWheeling(EventArgs e)
+        {
+            StopWheeling();
+        }
+
+        private void UnitManualMove(MovementArgs e)
+        {
+            ManualMove(e.Directions);
+        }
+
+        private void StopUnitManualMove(EventArgs e)
+        {
+            StopManualMove();
         }
     }
 }

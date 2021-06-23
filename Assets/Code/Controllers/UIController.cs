@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using PrimoVictoria.Core;
+using PrimoVictoria.Core.Events;
 using PrimoVictoria.Models;
 using TMPro;
 using UnityEngine;
@@ -15,59 +17,26 @@ namespace PrimoVictoria.Controllers
         public float DebugDurationSeconds = 5.0f;
         public float WheelGizmoSeconds = 0.10f;
         public int DebugLineHeight = 5;
-        public Vector3 SelectedUnitLocation;
-        public Vector3 MouseClickPosition;
         public List<Vector3> SelectedUnitDestinations; //will display as debug lines
 
         public Guid Id;
 
         private GameObject _devConsole;
         private TextMeshProUGUI _devConsoleText;
-        private bool _isDevConsoleVisible
+        private Vector3 _mouseClickPosition;
+        private Vector3 _selectedUnitLocationVector;
+
+        private bool IsDevConsoleVisible
         {
             get => _devConsole.activeInHierarchy;
             set => _devConsole.SetActive(value);
         }
 
-        private string _selectedUnitLocation => SelectedUnitLocation == Vector3.zero ? 
+        private string selectedUnitLocation => _selectedUnitLocationVector == Vector3.zero ? 
             "Selected Cmd Stand Location: <none>" : 
-            $"Selected Cmd Stand Location: {SelectedUnitLocation}";
+            $"Selected Cmd Stand Location: {_selectedUnitLocationVector}";
 
-        private string _currentMouseClickPosition => $"Current Mouse Click Position:  {MouseClickPosition}";
-
-        /// <summary>
-        /// Draws debug lines to the locations
-        /// </summary>
-        /// <param name="standLocations"></param>
-        public void SetNewUnitLocation(List<Vector3> standLocations)
-        {
-            if (!_isDevConsoleVisible) return;
-
-            //developer note: make sure the gizmos button is pressed in the gameview or you wont see this
-            var firstItem = true;
-            foreach(var point in standLocations)
-            {
-                var color = Color.red;
-                if (firstItem)
-                {
-                    color = Color.white;
-                    firstItem = false;
-                }
-                var up = transform.TransformDirection(Vector3.up) * DebugLineHeight;
-                Debug.DrawRay(point, up, color, DebugDurationSeconds);
-            }
-        }
-
-        public void DrawWheelPoints(Unit unit)
-        {
-            if (!_isDevConsoleVisible) return;
-
-            //make sure gizmos button is pressed in game view or you wont see this
-            //the actual pivots will be blue
-            //the other pivots will be red
-            Debug.DrawRay(unit.GetUnitWheelPoint(Unit.WheelPointIndices.Left_UpperLeft), Vector3.up, Color.blue, WheelGizmoSeconds);
-            Debug.DrawRay(unit.GetUnitWheelPoint(Unit.WheelPointIndices.Right_UpperRight), Vector3.up, Color.blue, WheelGizmoSeconds);
-        }
+        private string currentMouseClickPosition => $"Current Mouse Click Position:  {_mouseClickPosition}";
 
         private void Start()
         {
@@ -86,6 +55,10 @@ namespace PrimoVictoria.Controllers
         {
             _devConsole = transform.Find("DevConsole").gameObject;
             _devConsoleText = _devConsole.GetComponentInChildren<TextMeshProUGUI>();
+
+            EventManager.Subscribe<MouseClickEventArgs>(PrimoEvents.MouseOverGameBoard, MouseOverGameBoard);
+            EventManager.Subscribe<StandLocationArgs>(PrimoEvents.SelectedUnitLocationChanged, SelectedUnitLocationChanged);
+            EventManager.Subscribe<UserInterfaceArgs>(PrimoEvents.UserInterfaceChange, UserInterfaceChange);
         }
 
         /// <summary>
@@ -93,17 +66,72 @@ namespace PrimoVictoria.Controllers
         /// </summary>
         private void HandleInput()
         {
-            if (Input.GetButtonUp("DeveloperMode")) _isDevConsoleVisible = !_isDevConsoleVisible;
+            if (Input.GetButtonUp("DeveloperMode")) IsDevConsoleVisible = !IsDevConsoleVisible;
         }
 
         private void WriteOutput()
         {
-            if (!_isDevConsoleVisible) return;
+            if (!IsDevConsoleVisible) return;
             var output = new StringBuilder();
-            output.AppendLine(_selectedUnitLocation);
-            output.AppendLine(_currentMouseClickPosition);
+            output.AppendLine(selectedUnitLocation);
+            output.AppendLine(currentMouseClickPosition);
 
             _devConsoleText.text = output.ToString();
+        }
+
+        private void MouseOverGameBoard(MouseClickEventArgs e)
+        {
+            _mouseClickPosition = e.WorldPosition;
+        }
+
+        private void SelectedUnitLocationChanged(StandLocationArgs e)
+        {
+            _selectedUnitLocationVector = e.StandLocation;
+        }
+
+        private void UserInterfaceChange(UserInterfaceArgs e)
+        {
+            if (!IsDevConsoleVisible) return;
+
+            switch (e.Command)
+            {
+                case UserInterfaceArgs.UserInterfaceCommand.DrawWheelPoints:
+                    DrawWheelPoints(e.Unit);
+                    break;
+                case UserInterfaceArgs.UserInterfaceCommand.DrawUnitDestination:
+                    DrawUnitLocation(e.Positions);
+                    break;
+            }
+        }
+
+        private void DrawWheelPoints(Unit unit)
+        {
+            //make sure gizmos button is pressed in game view or you wont see this
+            //the actual pivots will be blue
+            //the other pivots will be red
+            Debug.DrawRay(unit.GetUnitWheelPoint(Unit.WheelPointIndices.Left_UpperLeft), Vector3.up, Color.blue, WheelGizmoSeconds);
+            Debug.DrawRay(unit.GetUnitWheelPoint(Unit.WheelPointIndices.Right_UpperRight), Vector3.up, Color.blue, WheelGizmoSeconds);
+        }
+
+        /// <summary>
+        /// Draws debug lines to the locations
+        /// </summary>
+        /// <param name="standLocations"></param>
+        private void DrawUnitLocation(List<Vector3> standLocations)
+        {
+            //developer note: make sure the gizmos button is pressed in the gameview or you wont see this
+            var firstItem = true;
+            foreach (var point in standLocations)
+            {
+                var color = Color.red;
+                if (firstItem)
+                {
+                    color = Color.white;
+                    firstItem = false;
+                }
+                var up = transform.TransformDirection(Vector3.up) * DebugLineHeight;
+                Debug.DrawRay(point, up, color, DebugDurationSeconds);
+            }
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace PrimoVictoria.Core
+namespace PrimoVictoria.Core.Events
 {
     public class MouseClickEventArgs : EventArgs
     {
@@ -33,10 +33,5 @@ namespace PrimoVictoria.Core
         public Vector3 WorldPosition { get; set; }
 
         public MouseButton Button { get; set; }
-    }
-
-    public class MouseClickGamePieceEventArgs : MouseClickEventArgs 
-    {
-        public int UnitID { get; set; }
     }
 }

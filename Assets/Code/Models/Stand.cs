@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 using PrimoVictoria.Controllers;
+using PrimoVictoria.Core;
+using PrimoVictoria.Core.Events;
 using PrimoVictoria.DataModels;
 using PrimoVictoria.Models.Parameters;
 using PrimoVictoria.Utilities;
@@ -55,7 +58,7 @@ namespace PrimoVictoria.Models
         /// </summary>
         public Vector3 UpperRightPoint => RankAndFilePosition.GetUpperPoint(this, RankAndFilePosition.StandPoint.UpperRight);
 
-        public EventHandler<StandLocationArgs> OnSendLocationData;
+        
 
         /// <summary>
         /// The location that the stand needs to travel to or the direction it needs to take if manually moving
@@ -107,7 +110,7 @@ namespace PrimoVictoria.Models
             if (!DiagnosticsOn) return;
 
             var args = new StandLocationArgs(Transform.position);
-            OnSendLocationData?.Invoke(this, args);
+            EventManager.Publish(PrimoEvents.SelectedUnitLocationChanged, args);
         }
 
         public void InitializeStand(StandInitializationParameters parms)

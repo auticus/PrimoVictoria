@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace PrimoVictoria.Models
+namespace PrimoVictoria.Core.Events
 {
     public class StandLocationArgs : EventArgs
     {

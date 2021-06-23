@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using PrimoVictoria.Controllers;
 using PrimoVictoria.Core;
+using PrimoVictoria.Core.Events;
 using PrimoVictoria.Utilities;
 
 namespace PrimoVictoria.UI.Cameras
@@ -22,10 +23,6 @@ namespace PrimoVictoria.UI.Cameras
         //[SerializeField] Texture2D NoUnit_Enemy = null; //no unit is selected, mouse is over an enemy  (remove comment when using)
         //[SerializeField] Texture2D Unknown = null;
         #endregion Cursors
-
-        public EventHandler<MouseClickEventArgs> OnMouseOverGameBoard { get; set; }
-        public EventHandler<Vector3> OnMouseOverTerrain { get;set; }
-        public EventHandler<MouseClickGamePieceEventArgs> OnMouseOverGamePiece { get; set; }
 
         private const int TERRAIN_LAYER = 8;
 
@@ -69,13 +66,12 @@ namespace PrimoVictoria.UI.Cameras
                 button = MouseClickEventArgs.MouseButton.Input2;
             }
 
-            OnMouseOverGameBoard?.Invoke(this,
-                new MouseClickEventArgs()
-                {
-                    ScreenPosition = Input.mousePosition, 
-                    WorldPosition = hitInfo.point,
-                    Button = button
-                });
+            EventManager.Publish(PrimoEvents.MouseOverGameBoard, new MouseClickEventArgs()
+            {
+                ScreenPosition = Input.mousePosition,
+                WorldPosition = hitInfo.point,
+                Button = button
+            });
         }
 
         /// <summary>
@@ -102,7 +98,7 @@ namespace PrimoVictoria.UI.Cameras
                 Button = GetButton()
             };
 
-            OnMouseOverGamePiece?.Invoke(this, args);
+            EventManager.Publish(PrimoEvents.MouseOverGamePiece, args);
             return true;
         }
 
@@ -144,7 +140,8 @@ namespace PrimoVictoria.UI.Cameras
             {
                 //todo: when units are selected etc, this will need more intelligent, right now we just set it to the default cursor
                 Cursor.SetCursor(NoUnit_Default, CursorHotspot, CursorMode.Auto);
-                OnMouseOverTerrain?.Invoke(this, hitInfo.point);
+                
+                //todo: mouse over terrain event needs implemented
                 return true;
             }
 

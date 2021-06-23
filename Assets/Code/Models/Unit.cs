@@ -4,6 +4,8 @@ using System.Linq;
 using UnityEngine;
 using PrimoVictoria.DataModels;
 using PrimoVictoria.Controllers;
+using PrimoVictoria.Core;
+using PrimoVictoria.Core.Events;
 using PrimoVictoria.Models.Parameters;
 using PrimoVictoria.Utilities;
 
@@ -26,12 +28,11 @@ namespace PrimoVictoria.Models
         public UnitData Data;
         public int ID;
         public string Name;
-        public EventHandler<StandLocationArgs> OnLocationChanged;
         public UnitFormation Formation { get; set; }
 
         private List<Stand> _stands;
         private Stand _pivotStand;  //the central stand in the first rank
-        private GameManager _gameManager;
+
         /// <summary>
         /// Left.UpperLeft, Left.UpperRight, Right.UpperLeft, Right.UpperRight position points of the unit
         /// </summary>
@@ -40,16 +41,6 @@ namespace PrimoVictoria.Models
         void Awake()
         {
             Formation = new UnitFormation { type = UnitFormation.FormationType.RankAndFile, FullRank = 5, Spacing = 1 };
-        }
-
-        private void Start()
-        {
-            _gameManager = FindObjectOfType<GameManager>();
-        }
-
-        public void SetLocation(Vector3 location)
-        {
-            throw new NotImplementedException("This feature has not been implemented yet Tokies");
         }
 
         public Stand GetPivotStand() => _pivotStand;
@@ -84,7 +75,6 @@ namespace PrimoVictoria.Models
 
                 if (i == 0)
                 {
-                    RegisterEvents(standModel); //first stand set its event up to track its location
                     _pivotStand = standModel;
                 }
             }
@@ -142,13 +132,13 @@ namespace PrimoVictoria.Models
                 destinations.Add(stand.Destination);
             }
 
-            _gameManager.SelectedUnitDestinations = destinations;
+            EventManager.Publish(PrimoEvents.UserInterfaceChange, new UserInterfaceArgs(this, UserInterfaceArgs.UserInterfaceCommand.DrawUnitDestination, destinations));
         }
 
         public void ManualMove(Vector3 direction, bool isRunning)
         {
-            if (_gameManager.SelectedUnitDestinations != null) _gameManager.SelectedUnitDestinations = null;
-            
+            EventManager.Publish(PrimoEvents.UserInterfaceChange, new UserInterfaceArgs(this, UserInterfaceArgs.UserInterfaceCommand.DrawUnitDestination, new List<Vector3>()));
+
             foreach (var stand in _stands)
             {
                 stand.ManualMove(direction, isRunning);
@@ -231,14 +221,6 @@ namespace PrimoVictoria.Models
             vectors.Add(rightMost.UpperRightPoint);
 
             return vectors;
-        }
-
-        private void RegisterEvents(Stand stand)
-        {
-            stand.OnSendLocationData += (sender, args) =>
-            {
-                OnLocationChanged?.Invoke(this, args);
-            };
         }
 
         /// <summary>

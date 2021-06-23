@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace PrimoVictoria.Core
+namespace PrimoVictoria.Core.Events
 {
     /// <summary>
     /// EventArgs derivative that holds information on which direction an entity should move
