@@ -3,7 +3,7 @@
 namespace PrimoVictoria.Core.Events
 {
     /// <summary>
-    /// Events that take in no arguments
+    /// Valid events that can be published and subscribed to
     /// </summary>
     public enum PrimoEvents
     {
