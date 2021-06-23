@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace PrimoVictoria
+namespace PrimoVictoria.Core
 {
     public class MouseClickEventArgs : EventArgs
     {

@@ -12,7 +12,7 @@ namespace PrimoVictoria.Controllers
     /// </summary>
     public class UIController : MonoBehaviour
     {
-        public float DebugDurationSeconds = 10.0f;
+        public float DebugDurationSeconds = 5.0f;
         public float WheelGizmoSeconds = 0.10f;
         public int DebugLineHeight = 5;
         public Vector3 SelectedUnitLocation;
@@ -44,10 +44,17 @@ namespace PrimoVictoria.Controllers
             if (!_isDevConsoleVisible) return;
 
             //developer note: make sure the gizmos button is pressed in the gameview or you wont see this
+            var firstItem = true;
             foreach(var point in standLocations)
             {
+                var color = Color.red;
+                if (firstItem)
+                {
+                    color = Color.white;
+                    firstItem = false;
+                }
                 var up = transform.TransformDirection(Vector3.up) * DebugLineHeight;
-                Debug.DrawRay(point, up, Color.red, DebugDurationSeconds);
+                Debug.DrawRay(point, up, color, DebugDurationSeconds);
             }
         }
 

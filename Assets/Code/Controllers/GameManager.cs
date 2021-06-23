@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using PrimoVictoria.Core;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using PrimoVictoria.Models;
@@ -18,6 +19,10 @@ namespace PrimoVictoria.Controllers
         private UIController _uiController; //the reference to the UIController (for things like the dev console etc)
 
         private List<Vector3> _selectedUnitDestinations;
+
+        /// <summary>
+        /// Allows Gizmo to draw these locations on the screen
+        /// </summary>
         public List<Vector3> SelectedUnitDestinations
         {
             get => _selectedUnitDestinations;

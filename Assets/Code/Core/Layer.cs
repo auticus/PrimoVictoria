@@ -1,4 +1,4 @@
-﻿namespace PrimoVictoria
+﻿namespace PrimoVictoria.Core
 {
     public class Layer
     {
