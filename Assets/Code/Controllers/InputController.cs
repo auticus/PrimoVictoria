@@ -48,7 +48,7 @@ namespace PrimoVictoria.Controllers
 
             if (Input.GetButtonUp(StaticResources.WHEEL_LEFT))
             {
-                EventManager.Publish(PrimoEvents.StopWheeling, EventArgs.Empty);
+                EventManager.Publish(PrimoEvents.StopWheeling, PrimoBaseEventArgs.Empty());
                 return true;
             }
 
@@ -63,7 +63,7 @@ namespace PrimoVictoria.Controllers
             
             if (Input.GetButtonUp(StaticResources.WHEEL_RIGHT))
             {
-                EventManager.Publish(PrimoEvents.StopWheeling, EventArgs.Empty);
+                EventManager.Publish(PrimoEvents.StopWheeling, PrimoBaseEventArgs.Empty());
                 return true;
             }
 
@@ -77,7 +77,7 @@ namespace PrimoVictoria.Controllers
 
             if (Input.GetButtonUp(StaticResources.MOVE_UNIT_RIGHT_LEFT) || Input.GetButtonUp(StaticResources.MOVE_UNIT_UP_DOWN))
             {
-                EventManager.Publish(PrimoEvents.StopManualMove, EventArgs.Empty);
+                EventManager.Publish(PrimoEvents.StopManualMove, PrimoBaseEventArgs.Empty());
                 return true;
             }
 

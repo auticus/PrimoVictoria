@@ -66,12 +66,7 @@ namespace PrimoVictoria.UI.Cameras
                 button = MouseClickEventArgs.MouseButton.Input2;
             }
 
-            EventManager.Publish(PrimoEvents.MouseOverGameBoard, new MouseClickEventArgs()
-            {
-                ScreenPosition = Input.mousePosition,
-                WorldPosition = hitInfo.point,
-                Button = button
-            });
+            EventManager.Publish(PrimoEvents.MouseOverGameBoard, new MouseClickEventArgs(Input.mousePosition, hitInfo.point, button));
         }
 
         /// <summary>
@@ -90,13 +85,7 @@ namespace PrimoVictoria.UI.Cameras
             if (selectedUnitID == null) return false;
 
             Cursor.SetCursor(NoUnit_Friendly, CursorHotspot, CursorMode.Auto);
-            var args = new MouseClickGamePieceEventArgs
-            {
-                ScreenPosition = Input.mousePosition,
-                WorldPosition = hitInfo.point,
-                UnitID = selectedUnitID.Value,
-                Button = GetButton()
-            };
+            var args = new MouseClickGamePieceEventArgs(selectedUnitID.Value, Input.mousePosition, hitInfo.point, GetButton());
 
             EventManager.Publish(PrimoEvents.MouseOverGamePiece, args);
             return true;

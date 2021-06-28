@@ -95,10 +95,10 @@ namespace PrimoVictoria.Controllers
             EventManager.Subscribe<MouseClickEventArgs>(PrimoEvents.MouseOverGameBoard, MouseOverGameBoard);
             EventManager.Subscribe<MouseClickGamePieceEventArgs>(PrimoEvents.MouseOverGamePiece, MouseOverGamePiece);
             EventManager.Subscribe<MovementArgs>(PrimoEvents.UnitWheeling, UnitWheeling);
-            EventManager.Subscribe<EventArgs>(PrimoEvents.StopWheeling, StopWheeling);
-            EventManager.Subscribe<EventArgs>(PrimoEvents.StopManualMove, StopUnitManualMove);
+            EventManager.Subscribe<PrimoBaseEventArgs>(PrimoEvents.StopWheeling, StopWheeling);
+            EventManager.Subscribe<PrimoBaseEventArgs>(PrimoEvents.StopManualMove, StopUnitManualMove);
             EventManager.Subscribe<MovementArgs>(PrimoEvents.UnitManualMove, UnitManualMove);
-            EventManager.Subscribe<EventArgs>(PrimoEvents.InitializeGame, InitializeController);
+            EventManager.Subscribe<PrimoBaseEventArgs>(PrimoEvents.InitializeGame, InitializeController);
         }
 
         private void InitializeController(EventArgs e)

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace PrimoVictoria.Core.Events
 {
-    public class StandLocationArgs : EventArgs
+    public class StandLocationArgs : PrimoBaseEventArgs
     {
         public Vector3 StandLocation;
 

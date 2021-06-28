@@ -7,9 +7,9 @@ namespace PrimoVictoria.Core.Events
     /// </summary>
     public enum PrimoEvents
     {
-        [PrimoEventsAttribute(typeof(EventArgs))]
+        [PrimoEventsAttribute(typeof(PrimoBaseEventArgs))]
         StopWheeling,
-        [PrimoEventsAttribute(typeof(EventArgs))]
+        [PrimoEventsAttribute(typeof(PrimoBaseEventArgs))]
         StopManualMove,
         [PrimoEventsAttribute(typeof(MovementArgs))]
         UnitWheeling,
@@ -23,7 +23,7 @@ namespace PrimoVictoria.Core.Events
         SelectedUnitLocationChanged,
         [PrimoEventsAttribute(typeof(UserInterfaceArgs))]
         UserInterfaceChange,
-        [PrimoEventsAttribute(typeof(EventArgs))]
+        [PrimoEventsAttribute(typeof(PrimoBaseEventArgs))]
         InitializeGame
     }
 

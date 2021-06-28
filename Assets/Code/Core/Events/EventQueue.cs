@@ -7,7 +7,7 @@ namespace PrimoVictoria.Core.Events
     /// Primo Event Queue used to handle messages and pass them to subscribers
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class EventQueue<T> : IEventQueue<T> where T: EventArgs
+    public class EventQueue<T> : IEventQueue<T> where T: PrimoBaseEventArgs
     {
         private readonly Dictionary<PrimoEvents, Action<T>> _eventDictionary;
 

@@ -37,7 +37,7 @@ namespace PrimoVictoria.Controllers
                 SceneManager.LoadScene(StaticResources.SANDBOX_SCENE);
             }
             
-            EventManager.Publish(PrimoEvents.InitializeGame, EventArgs.Empty);
+            EventManager.Publish(PrimoEvents.InitializeGame, PrimoBaseEventArgs.Empty());
         }
     }
 }

@@ -1,9 +1,8 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace PrimoVictoria.Core.Events
 {
-    public class MouseClickEventArgs : EventArgs
+    public class MouseClickEventArgs : PrimoBaseEventArgs
     {
         public enum MouseButton
         {
@@ -25,13 +24,20 @@ namespace PrimoVictoria.Core.Events
         /// <summary>
         /// SCREEN position of the mouse
         /// </summary>
-        public Vector3 ScreenPosition { get; set; }
+        public Vector3 ScreenPosition { get; }
 
         /// <summary>
         /// WORLD position of the mouse
         /// </summary>
-        public Vector3 WorldPosition { get; set; }
+        public Vector3 WorldPosition { get; }
 
-        public MouseButton Button { get; set; }
+        public MouseButton Button { get; }
+
+        public MouseClickEventArgs( Vector3 screenPos, Vector3 worldPos, MouseButton button)
+        {
+            ScreenPosition = screenPos;
+            WorldPosition = worldPos;
+            Button = button;
+        }
     }
 }
