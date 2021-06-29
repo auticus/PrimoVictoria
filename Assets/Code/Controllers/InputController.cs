@@ -26,10 +26,32 @@ namespace PrimoVictoria.Controllers
             //2 - manual movement
             //3 - point and click with the mouse
             //this covers the first two
+            HandleCameraKeys();
             if (HandleWheeling()) return;
             if (HandleManualMovement()) return;
         }
-        
+
+        /// <summary>
+        /// Monitors and watches for keyboard and controller inputs
+        /// </summary>
+        private void HandleCameraKeys()
+        {
+            if (Input.GetButtonUp("DeveloperMode"))
+            {
+                EventManager.Publish(PrimoEvents.UserInterfaceChange, new UserInterfaceArgs(UserInterfaceArgs.UserInterfaceCommand.ToggleDeveloperMode));
+            }
+
+            var xAxis = Input.GetAxis("Horizontal");
+            var zAxis = Input.GetAxis("Vertical");
+            var scroll = Input.GetAxis("Mouse ScrollWheel");
+            var mouse1 = Input.GetKey(KeyCode.Mouse1);
+            var mouse2 = Input.GetKey(KeyCode.Mouse2);
+            var rotation = Input.GetAxis("Rotation");
+            
+            var cameraArgs = new CameraEventArgs(new Vector2(xAxis, zAxis),rotation, new CameraEventArgs.MouseData(mouse1, mouse2, scroll));
+            EventManager.Publish(PrimoEvents.CameraMove,cameraArgs);
+        }
+
         /// <summary>
         /// Checks for any input indicating a wheel should happen and returns TRUE if so
         /// </summary>

@@ -47,7 +47,6 @@ namespace PrimoVictoria.Controllers
 
         private void Update()
         {
-            HandleInput();
             WriteOutput();
         }
 
@@ -59,14 +58,6 @@ namespace PrimoVictoria.Controllers
             EventManager.Subscribe<MouseClickEventArgs>(PrimoEvents.MouseOverGameBoard, MouseOverGameBoard);
             EventManager.Subscribe<StandLocationArgs>(PrimoEvents.SelectedUnitLocationChanged, SelectedUnitLocationChanged);
             EventManager.Subscribe<UserInterfaceArgs>(PrimoEvents.UserInterfaceChange, UserInterfaceChange);
-        }
-
-        /// <summary>
-        /// Monitors and watches for keyboard and controller inputs
-        /// </summary>
-        private void HandleInput()
-        {
-            if (Input.GetButtonUp("DeveloperMode")) IsDevConsoleVisible = !IsDevConsoleVisible;
         }
 
         private void WriteOutput()
@@ -91,6 +82,12 @@ namespace PrimoVictoria.Controllers
 
         private void UserInterfaceChange(UserInterfaceArgs e)
         {
+            if (e.Command == UserInterfaceArgs.UserInterfaceCommand.ToggleDeveloperMode)
+            {
+                IsDevConsoleVisible = !IsDevConsoleVisible;
+                return;
+            }
+
             if (!IsDevConsoleVisible) return;
 
             switch (e.Command)

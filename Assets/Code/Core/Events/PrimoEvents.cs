@@ -24,7 +24,9 @@ namespace PrimoVictoria.Core.Events
         [PrimoEventsAttribute(typeof(UserInterfaceArgs))]
         UserInterfaceChange,
         [PrimoEventsAttribute(typeof(PrimoBaseEventArgs))]
-        InitializeGame
+        InitializeGame,
+        [PrimoEvents(typeof(CameraEventArgs))]
+        CameraMove
     }
 
     /// <summary>

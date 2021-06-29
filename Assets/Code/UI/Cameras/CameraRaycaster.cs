@@ -2,7 +2,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using PrimoVictoria.Controllers;
-using PrimoVictoria.Core;
 using PrimoVictoria.Core.Events;
 using PrimoVictoria.Utilities;
 

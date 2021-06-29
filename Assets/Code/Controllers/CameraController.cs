@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using PrimoVictoria.Core.Events;
 
-namespace PrimoVictoria.UI.Cameras
+namespace PrimoVictoria.Controllers
 {
     [RequireComponent(typeof(Camera))]
     public class CameraController : MonoBehaviour
@@ -44,26 +45,28 @@ namespace PrimoVictoria.UI.Cameras
             _currentCameraTilt = StartingCameraTilt;
             var camera = FindObjectOfType<Camera>();
             camera.fieldOfView = FieldOfView;
-        }
 
-        void LateUpdate()
+            EventManager.Subscribe<CameraEventArgs>(PrimoEvents.CameraMove, HandleCameraInput);
+        }
+        #endregion Unity Methods
+
+        private void HandleCameraInput(CameraEventArgs e)
         {
-            HandleAxisMovement();
+            HandleAxisMovement(e);
 
             //if you let the user adjust both the tilt and the rotation at the same time, the camera can get really jacked up on its side potentially
             //only let them tilt if they did not rotate
-            if (HandleRotation() == false)
-                HandleTilt();
+            if (HandleRotation(e) == false)
+                HandleTilt(e);
         }
-        #endregion Unity Methods
 
         /// <summary>
         /// Handles the movement of the camera along the x and z axis
         /// </summary>
-        private void HandleAxisMovement()
+        private void HandleAxisMovement(CameraEventArgs e)
         {
-            var xAxis = Input.GetAxis("Horizontal");
-            var zAxis = Input.GetAxis("Vertical");
+            var xAxis = e.Axis.x;
+            var zAxis = e.Axis.y; //its a vector2 so called "y" even though we are applying it to the z axis
             var pos = transform.position;
 
             //the mouse axis will override the keyboard
@@ -72,7 +75,7 @@ namespace PrimoVictoria.UI.Cameras
 
             var x = xAxis * CameraMovementSpeed * Time.deltaTime;
             var z = zAxis * CameraMovementSpeed * Time.deltaTime;
-            var y = CalculateHeight(pos.y);
+            var y = CalculateHeight(e);
 
             pos.x += x;
             pos.z += z;
@@ -86,9 +89,9 @@ namespace PrimoVictoria.UI.Cameras
         }
 
         private float _groundDistance;
-        private float CalculateHeight(float currentY)
+        private float CalculateHeight(CameraEventArgs e)
         {
-            var scroll = Input.GetAxis("Mouse ScrollWheel");
+            var scroll = e.Mouse.Scroll;
             var standardHeightCalculation = scroll * CameraZoomSpeed * Time.deltaTime;
 
             //it could be that terrain is now raised enough where the camera is into the terrain.  We need to adjust for that and bring the camera up to avoid eating dirt
@@ -196,19 +199,16 @@ namespace PrimoVictoria.UI.Cameras
         /// Handles the rotation, will return TRUE if a rotation has occurred.  Will not rotate at all if the left SHIFT button is being held down (will always return FALSE)
         /// </summary>
         /// <returns>TRUE if a rotation has occurred</returns>
-        private bool HandleRotation()
+        private bool HandleRotation(CameraEventArgs e)
         {
-            if (Input.GetKey(KeyCode.LeftShift))
-                return false;
-
             float rotation = 0.0f;
-            if (MouseMovementEnabled && Input.GetKey(KeyCode.Mouse2))
+            if (MouseMovementEnabled && e.Mouse.Button2)
             {
                 rotation = -MouseAxis.x;
             }
             else
             {
-                rotation = Input.GetAxis("Rotation");
+                rotation = e.RotationAxis;
             }
 
             _currentCameraRotation += rotation * CameraRotationSpeed * Time.deltaTime;
@@ -220,10 +220,10 @@ namespace PrimoVictoria.UI.Cameras
         /// <summary>
         /// Handles the tilting of the camera.  
         /// </summary>
-        private void HandleTilt()
+        private void HandleTilt(CameraEventArgs e)
         {
             float tilt = 0.0f;
-            if (MouseMovementEnabled && Input.GetKey(KeyCode.Mouse2))
+            if (MouseMovementEnabled && e.Mouse.Button2)
             {
                 tilt = -MouseAxis.y;
             }
