@@ -26,6 +26,7 @@ namespace PrimoVictoria.Controllers
         [SerializeField] private float FieldOfView = 60.0f;
         [SerializeField] [Tooltip("How many units from edge of screen will trigger mouse movement")] private float MouseMoveBorderEdgeScreen = 10.0f;
         [SerializeField] private bool MouseMovementEnabled = true;
+        [SerializeField] private float MouseRotationMultiplier = 5.0f;
         [SerializeField] [Tooltip("Enable to have the speed of camera movement speed up the closer you get to the screen edge")] private bool MouseMoveAccelerationEnabled = true;
         [SerializeField] [Tooltip("How far the camera can go in X or Y coordinates")] private Vector2 MapLimit = new Vector2(60, 60);
         [SerializeField] [Tooltip("The LayerMasks that represent the ground or anything else that can affect camera height")] private List<LayerMask> GroundMasks = new List<LayerMask>() { -1 };
@@ -56,8 +57,8 @@ namespace PrimoVictoria.Controllers
 
             //if you let the user adjust both the tilt and the rotation at the same time, the camera can get really jacked up on its side potentially
             //only let them tilt if they did not rotate
-            if (HandleRotation(e) == false)
-                HandleTilt(e);
+            HandleRotation(e);
+            HandleTilt(e);
         }
 
         /// <summary>
@@ -202,9 +203,10 @@ namespace PrimoVictoria.Controllers
         private bool HandleRotation(CameraEventArgs e)
         {
             float rotation = 0.0f;
-            if (MouseMovementEnabled && e.Mouse.Button2)
+
+            if (MouseMovementEnabled && e.Mouse.Button3) //scroll wheel
             {
-                rotation = -MouseAxis.x;
+                rotation = -MouseAxis.x * MouseRotationMultiplier;
             }
             else
             {
@@ -223,9 +225,9 @@ namespace PrimoVictoria.Controllers
         private void HandleTilt(CameraEventArgs e)
         {
             float tilt = 0.0f;
-            if (MouseMovementEnabled && e.Mouse.Button2)
+            if (MouseMovementEnabled && e.Mouse.Button3)
             {
-                tilt = -MouseAxis.y;
+                tilt = -MouseAxis.y * MouseRotationMultiplier;
             }
             else
             {

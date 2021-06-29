@@ -44,11 +44,13 @@ namespace PrimoVictoria.Controllers
             var xAxis = Input.GetAxis("Horizontal");
             var zAxis = Input.GetAxis("Vertical");
             var scroll = Input.GetAxis("Mouse ScrollWheel");
-            var mouse1 = Input.GetKey(KeyCode.Mouse1);
-            var mouse2 = Input.GetKey(KeyCode.Mouse2);
+            var mouse1 = Input.GetKey(KeyCode.Mouse0);
+            var mouse2 = Input.GetKey(KeyCode.Mouse1);
+            var mouse3 = Input.GetKey(KeyCode.Mouse2);
+
             var rotation = Input.GetAxis("Rotation");
             
-            var cameraArgs = new CameraEventArgs(new Vector2(xAxis, zAxis),rotation, new CameraEventArgs.MouseData(mouse1, mouse2, scroll));
+            var cameraArgs = new CameraEventArgs(new Vector2(xAxis, zAxis),rotation, new CameraEventArgs.MouseData(mouse1, mouse2, mouse3, scroll));
             EventManager.Publish(PrimoEvents.CameraMove,cameraArgs);
         }
 

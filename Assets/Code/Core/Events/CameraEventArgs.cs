@@ -8,12 +8,14 @@ namespace PrimoVictoria.Core.Events
         {
             public bool Button1;
             public bool Button2;
+            public bool Button3;
             public float Scroll;
 
-            public MouseData(bool button1, bool button2,  float scroll)
+            public MouseData(bool button1, bool button2, bool button3, float scroll)
             {
                 Button1 = button1;
                 Button2 = button2;
+                Button3 = button3;
                 Scroll = scroll;
             }
         }
