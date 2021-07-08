@@ -26,7 +26,7 @@ namespace PrimoVictoria.Controllers
             //2 - manual movement
             //3 - point and click with the mouse
             //this covers the first two
-            HandleCameraKeys();
+            HandleKeys();
             if (HandleWheeling()) return;
             if (HandleManualMovement()) return;
         }
@@ -34,11 +34,21 @@ namespace PrimoVictoria.Controllers
         /// <summary>
         /// Monitors and watches for keyboard and controller inputs
         /// </summary>
-        private void HandleCameraKeys()
+        private void HandleKeys()
         {
             if (Input.GetButtonUp("DeveloperMode"))
             {
-                EventManager.Publish(PrimoEvents.UserInterfaceChange, new UserInterfaceArgs(UserInterfaceArgs.UserInterfaceCommand.ToggleDeveloperMode));
+                EventManager.Publish(PrimoEvents.DeveloperModeToggled, new KeyEventArgs(KeyEventArgs.PrimoKeyState.Up));
+            }
+
+            if (Input.GetButtonUp("ShowUnitDestination"))
+            {
+                EventManager.Publish(PrimoEvents.ShowUnitDestinationToggled, new KeyEventArgs(KeyEventArgs.PrimoKeyState.Up));
+            }
+
+            if (Input.GetButton("ShowUnitDestination"))
+            {
+                EventManager.Publish(PrimoEvents.ShowUnitDestinationToggled, new KeyEventArgs(KeyEventArgs.PrimoKeyState.Pressed));
             }
 
             var xAxis = Input.GetAxis("Horizontal");

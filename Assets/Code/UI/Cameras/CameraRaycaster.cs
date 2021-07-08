@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using PrimoVictoria.Controllers;
 using PrimoVictoria.Core.Events;

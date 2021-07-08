@@ -42,7 +42,7 @@ namespace PrimoVictoria.Controllers
 
                 if (_selectedUnit != null)
                 {
-                    _selectedUnit.Select(Projectors, isFriendly: true); //todo: tell if friend or not and not hardcode it to always be friend
+                    _selectedUnit.SelectFriendly(Projectors); //todo: tell if friend or not and not hardcode it to always be friend
                     _selectedUnit.ToggleDiagnostic(true);
                 }
                 else
@@ -74,7 +74,7 @@ namespace PrimoVictoria.Controllers
 
                 if (_ghostSelectedUnit != null)
                 {
-                    _ghostSelectedUnit.GhostSelect(Projectors, isFriendly: true);  //todo: remove hardcoded friendly
+                    _ghostSelectedUnit.GhostSelectFriendly(Projectors);  //todo: remove hardcoded friendly
                 }
             }
         }

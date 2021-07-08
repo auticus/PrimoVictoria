@@ -26,7 +26,11 @@ namespace PrimoVictoria.Core.Events
         [PrimoEventsAttribute(typeof(PrimoBaseEventArgs))]
         InitializeGame,
         [PrimoEvents(typeof(CameraEventArgs))]
-        CameraMove
+        CameraMove,
+        [PrimoEvents(typeof(KeyEventArgs))]
+        DeveloperModeToggled,
+        [PrimoEvents(typeof(KeyEventArgs))]
+        ShowUnitDestinationToggled
     }
 
     /// <summary>

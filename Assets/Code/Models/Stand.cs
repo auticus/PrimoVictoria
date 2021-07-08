@@ -6,6 +6,7 @@ using PrimoVictoria.Core;
 using PrimoVictoria.Core.Events;
 using PrimoVictoria.DataModels;
 using PrimoVictoria.Models.Parameters;
+using PrimoVictoria.UI;
 using PrimoVictoria.Utilities;
 
 namespace PrimoVictoria.Models
@@ -144,14 +145,28 @@ namespace PrimoVictoria.Models
             _visible = value;
         }
 
-        public void Select(Projectors projectors, bool isFriendly)
+        public void SelectFriendly(Projectors projectors)
         {
-           SelectModelMesh(projectors, isFriendly, ghost: false);
+            if (!_visible) return;
+            PrimoProjector.DrawFriendlyProjector(projectors, _controller.AgentSize, MiniatureMesh.transform);
         }
 
-        public void GhostSelect(Projectors projectors, bool isFriendly)
+        public void SelectEnemy(Projectors projectors)
         {
-            SelectModelMesh(projectors, isFriendly, ghost: true);
+            if (!_visible) return;
+            PrimoProjector.DrawEnemyProjector(projectors, _controller.AgentSize, MiniatureMesh.transform);
+        }
+
+        public void SelectGhostedFriendly(Projectors projectors)
+        {
+            if (!_visible) return;
+            PrimoProjector.DrawFriendlyGhostedProjector(projectors, _controller.AgentSize, MiniatureMesh.transform);
+        }
+
+        public void SelectGhostedEnemy(Projectors projectors)
+        {
+            if (!_visible) return;
+            PrimoProjector.DrawEnemyGhostedProjector(projectors, _controller.AgentSize, MiniatureMesh.transform);
         }
 
         /// <summary>
@@ -210,57 +225,6 @@ namespace PrimoVictoria.Models
 
         #region Private Methods
 
-        /// <summary>
-        /// Draws selection projector around each model mesh
-        /// </summary>
-        /// <param name="projectors"></param>
-        /// <param name="isFriendly"></param>
-        private void SelectModelMesh(Projectors projectors, bool isFriendly, bool ghost)
-        {
-            //draw the projector prefab (the circle under the models) under the models
-            var selectionObject = GetSelectionProjector(projectors, isFriendly, ghost);
-            if (selectionObject == null) return;
-
-            selectionObject.transform.SetParent(MiniatureMesh.transform, worldPositionStays: false); //worldPositionStays = false otherwise who knows where the circle goes
-        }
-
-        private GameObject GetSelectionProjector(Projectors projectors, bool isFriendly, bool ghost)
-        {
-            var projectorPrefab = GetActiveProjectorPrefab(projectors, isFriendly: isFriendly);
-
-            if (projectorPrefab == null) return null;
-
-            var selectionObject = Instantiate(projectorPrefab);
-            var projector = selectionObject.GetComponentInChildren<Projector>();
-            projector.orthographicSize = GetProjectorOrthoSize();
-
-            //set the transparency depending on if we're ghosting or not
-            var falloff = ghost ? projectors.GhostSelectionTransparency : projectors.FullSelectionTransparency; //transparency value
-            var color = projector.material.color;
-            projector.material.color = new Color(color.r, color.g, color.b, falloff);
-
-            return selectionObject;
-        }
-
-        /// <summary>
-        /// Based on if the stand is visible and what the unit type is - return the size of the selection cursor
-        /// </summary>
-        /// <returns></returns>
-        private float GetProjectorOrthoSize()
-        {
-            if (_visible)
-                return _controller.AgentSize;
-
-            return 0;
-        }
-
-        private GameObject GetActiveProjectorPrefab(Projectors projector, bool isFriendly)
-        {
-            if (_visible == false) return null;
-            if (isFriendly) return projector.FriendlySelection;
-
-            return projector.EnemySelection;
-        }
         
         private void AddMiniatureToStand(Vector3 location, Vector3 rotation)
         {

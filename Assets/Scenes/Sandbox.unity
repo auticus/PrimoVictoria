@@ -605,6 +605,11 @@ PrefabInstance:
       propertyPath: CameraZoomSpeed
       value: 1500
       objectReference: {fileID: 0}
+    - target: {fileID: 8411771139698316961, guid: 7a997a8b9950b9844b8f385012adfbc5,
+        type: 3}
+      propertyPath: MouseRotationMultiplier
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 8411771139698316963, guid: 7a997a8b9950b9844b8f385012adfbc5,
         type: 3}
       propertyPath: m_Name

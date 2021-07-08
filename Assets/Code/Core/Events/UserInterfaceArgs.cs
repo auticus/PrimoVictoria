@@ -9,8 +9,7 @@ namespace PrimoVictoria.Core.Events
         public enum UserInterfaceCommand
         {
             DrawWheelPoints,
-            DrawUnitDestination,
-            ToggleDeveloperMode
+            DrawUnitDestination
         }
 
         public UserInterfaceCommand Command { get; }

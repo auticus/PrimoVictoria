@@ -89,19 +89,39 @@ namespace PrimoVictoria.Models
         /// Selects the Unit overall, which should highlight all of the stands within it
         /// </summary>
         /// <param name="projectorPrefab"></param>
-        public void Select(Projectors projectors, bool isFriendly)
+        public void SelectFriendly(Projectors projectors)
         {
             foreach (var stand in _stands)
             {
-                stand.Select(projectors, isFriendly);
+                stand.SelectFriendly(projectors);
             }
         }
 
-        public void GhostSelect(Projectors projectors, bool isFriendly)
+        public void GhostSelectFriendly(Projectors projectors)
         {
             foreach (var stand in _stands)
             {
-                stand.GhostSelect(projectors, isFriendly);
+                stand.SelectGhostedFriendly(projectors);
+            }
+        }
+
+        /// <summary>
+        /// Selects the Unit overall, which should highlight all of the stands within it
+        /// </summary>
+        /// <param name="projectorPrefab"></param>
+        public void SelectEnemy(Projectors projectors)
+        {
+            foreach (var stand in _stands)
+            {
+                stand.SelectEnemy(projectors);
+            }
+        }
+
+        public void GhostSelectEnemy(Projectors projectors)
+        {
+            foreach (var stand in _stands)
+            {
+                stand.SelectGhostedEnemy(projectors);
             }
         }
 
