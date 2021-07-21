@@ -11,7 +11,16 @@ namespace PrimoVictoria.Utilities
     /// </summary>
     public static class StaticResources
     {
+        /// <summary>
+        /// The name of the tag applied to any mesh decorators such as projectors
+        /// </summary>
         public const string MESH_DECORATOR_TAG = "UnitMeshDecorator";
+
+        /// <summary>
+        /// The name of the tag applied to the unbound decorator projectors
+        /// </summary>
+        public const string UNBOUND_DECORATOR_TAG = "UnboundDecorator";
+
         public const string SELECT_BUTTON = "Input1"; //the name of the control set in bindings
         public const string EXECUTE_BUTTON = "Input2";
         public const string WHEEL_LEFT = "WheelUnitLeft";

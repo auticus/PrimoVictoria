@@ -4,6 +4,7 @@ using System.Linq;
 using PrimoVictoria.Core.Events;
 using PrimoVictoria.DataModels;
 using PrimoVictoria.Models;
+using PrimoVictoria.UI;
 using PrimoVictoria.Utilities;
 using UnityEngine;
 
@@ -19,6 +20,7 @@ namespace PrimoVictoria.Controllers
 
         private GameObject UnitsCollection { get; set; }
         private const string UNITS_GAMEOBJECT = "Units";
+        private bool _showSelectedUnitDestination = false;
 
         private Unit _selectedUnit;
         /// <summary>
@@ -99,11 +101,17 @@ namespace PrimoVictoria.Controllers
             EventManager.Subscribe<PrimoBaseEventArgs>(PrimoEvents.StopManualMove, StopUnitManualMove);
             EventManager.Subscribe<MovementArgs>(PrimoEvents.UnitManualMove, UnitManualMove);
             EventManager.Subscribe<PrimoBaseEventArgs>(PrimoEvents.InitializeGame, InitializeController);
+            EventManager.Subscribe<KeyEventArgs>(PrimoEvents.ShowUnitDestinationToggled, ShowUnitDestinationToggled);
         }
 
         private void InitializeController(EventArgs e)
         {
             LoadUnits();
+        }
+
+        private void ShowUnitDestinationToggled(KeyEventArgs e)
+        {
+            _showSelectedUnitDestination = e.KeyState == KeyEventArgs.PrimoKeyState.Pressed;
         }
 
         private void LoadUnits()
@@ -162,11 +170,6 @@ namespace PrimoVictoria.Controllers
             {
                 GhostSelectedUnit = unit;
             }
-        }
-
-        private void ClearGhostSelect()
-        {
-            GhostSelectedUnit = null;
         }
 
         private void MoveSelectedUnitToPoint(Vector3 worldPosition, bool isRunning)
@@ -267,6 +270,7 @@ namespace PrimoVictoria.Controllers
             //left-clicking the gameboard unselects any saved units
             //right-clicking the gameboard will attempt to move the selected unit to that point
             //simply moving over the gameboard will deselect any ghost-selected units (units that have ghost icons under them indicating they were moused over)
+            //todo: if the showSelectedUnit is toggled AND there is a selected unit - ghost the projected movement of the unit
             if (e.Button == MouseClickEventArgs.MouseButton.Input1)
             {
                 SetActiveUnit(null);
@@ -276,7 +280,29 @@ namespace PrimoVictoria.Controllers
                 MoveSelectedUnitToPoint(e.WorldPosition, isRunning: false);
             }
 
-            ClearGhostSelect();
+            ClearUnboundProjectors(); //when moving mouse around the game table, clear any ghosted instances that may exist
+
+            if (_showSelectedUnitDestination && SelectedUnit != null)
+            {
+                ShowHypotheticalDestination(e.WorldPosition);
+            }
+        }
+
+        private void ShowHypotheticalDestination(Vector3 worldPosition)
+        {
+            //given a selected unit, the mouse is moving around and the user wants to see the outline of where that unit will end up
+            //place a ghosted footprint where the mouse is
+            //this assumes that the SelectedUnit is not null (checked beforehand)
+            var destinations = SelectedUnit.GetProjectedMove(worldPosition);
+            var pivotStand = _selectedUnit.GetPivotStand();
+
+            PrimoProjector.DrawUnboundFriendlyProjectors(Projectors, pivotStand.MeshSize, destinations, pivotStand.Transform.rotation );
+        }
+
+        private void ClearUnboundProjectors()
+        {
+            GhostSelectedUnit = null;
+            PrimoProjector.RemoveUnboundProjectors();
         }
 
         private void SetActiveUnit(Unit unit)

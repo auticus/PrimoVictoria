@@ -100,6 +100,8 @@ namespace PrimoVictoria.Models
 
         public bool DiagnosticsOn;
 
+        public float MeshSize => _controller.AgentSize;
+
         private bool _visible; //whether or not the miniature is visible or not  
         
         private UnitData _unitData; //data pertinent to the unit overall
@@ -148,25 +150,25 @@ namespace PrimoVictoria.Models
         public void SelectFriendly(Projectors projectors)
         {
             if (!_visible) return;
-            PrimoProjector.DrawFriendlyProjector(projectors, _controller.AgentSize, MiniatureMesh.transform);
+            PrimoProjector.DrawFriendlyProjector(projectors, MeshSize, MiniatureMesh.transform);
         }
 
         public void SelectEnemy(Projectors projectors)
         {
             if (!_visible) return;
-            PrimoProjector.DrawEnemyProjector(projectors, _controller.AgentSize, MiniatureMesh.transform);
+            PrimoProjector.DrawEnemyProjector(projectors, MeshSize, MiniatureMesh.transform);
         }
 
         public void SelectGhostedFriendly(Projectors projectors)
         {
             if (!_visible) return;
-            PrimoProjector.DrawFriendlyGhostedProjector(projectors, _controller.AgentSize, MiniatureMesh.transform);
+            PrimoProjector.DrawFriendlyGhostedProjector(projectors, MeshSize, MiniatureMesh.transform);
         }
 
         public void SelectGhostedEnemy(Projectors projectors)
         {
             if (!_visible) return;
-            PrimoProjector.DrawEnemyGhostedProjector(projectors, _controller.AgentSize, MiniatureMesh.transform);
+            PrimoProjector.DrawEnemyGhostedProjector(projectors, MeshSize, MiniatureMesh.transform);
         }
 
         /// <summary>
@@ -182,6 +184,18 @@ namespace PrimoVictoria.Models
             ManualMoving = false;
             Speed = isRunning ? _unitData.RunSpeed : _unitData.WalkSpeed;
             Destination = RankAndFilePosition.CalculateMovePosition(rawDestinationPosition, this, RankIndex, FileIndex, formation.Spacing);
+        }
+
+        /// <summary>
+        /// Projects where the stand will be given a position and a formation and returns that vector3 back
+        /// </summary>
+        /// <param name="rawDestinationPosition"></param>
+        /// <param name="formation"></param>
+        /// <returns>The projected location of the stand</returns>
+        public Vector3 ProjectedMove(Vector3 rawDestinationPosition, UnitFormation formation)
+        {
+            //this follows the same logic as Move except that we aren't actually moving or caring about speed or manual movements or anything, just getting the destination back
+            return RankAndFilePosition.CalculateMovePosition(rawDestinationPosition, this, RankIndex, FileIndex, formation.Spacing);
         }
 
         public void ManualMove(Vector3 direction, bool isRunning)

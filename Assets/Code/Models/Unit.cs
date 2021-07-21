@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using PrimoVictoria.DataModels;
-using PrimoVictoria.Controllers;
-using PrimoVictoria.Core;
 using PrimoVictoria.Core.Events;
 using PrimoVictoria.Models.Parameters;
+using PrimoVictoria.UI;
 using PrimoVictoria.Utilities;
 
 namespace PrimoVictoria.Models
@@ -43,6 +42,10 @@ namespace PrimoVictoria.Models
             Formation = new UnitFormation { type = UnitFormation.FormationType.RankAndFile, FullRank = 5, Spacing = 1 };
         }
 
+        /// <summary>
+        /// Gets the pivot stand, the stand that is considered the center of the front rank
+        /// </summary>
+        /// <returns></returns>
         public Stand GetPivotStand() => _pivotStand;
         
         /// <summary>
@@ -77,11 +80,6 @@ namespace PrimoVictoria.Models
                 {
                     _pivotStand = standModel;
                 }
-            }
-
-            foreach (var stand in _stands)
-            {
-                Debug.Log($"Unit::InitializeUnit - Stand at File {stand.FileIndex} is Position {stand.Transform.position}");
             }
         }
 
@@ -127,14 +125,7 @@ namespace PrimoVictoria.Models
 
         public void Unselect()
         {
-            //this may not be the best way to go about this but doing research, the performance shouldn't be bad since Unity keeps a list of all actual tagged objects
-            //if performance is an issue, try keeping the projectors in an arraylist and just hit that
-            //we created a series of projectors around the meshes, now find them and destroy them
-            var projectors = GameObject.FindGameObjectsWithTag(StaticResources.MESH_DECORATOR_TAG);
-            foreach (var projector in projectors)
-            {
-                Destroy(projector);
-            }
+            PrimoProjector.RemoveProjectors(StaticResources.MESH_DECORATOR_TAG);
         }
 
         /// <summary>
@@ -155,6 +146,26 @@ namespace PrimoVictoria.Models
             EventManager.Publish(PrimoEvents.UserInterfaceChange, new UserInterfaceArgs(this, UserInterfaceArgs.UserInterfaceCommand.DrawUnitDestination, destinations));
         }
 
+        /// <summary>
+        /// Given a position, will draw the footprint of the unit in that location
+        /// </summary>
+        /// <param name="pivotMeshRawPosition"></param>
+        public IEnumerable<Vector3> GetProjectedMove(Vector3 pivotMeshRawPosition)
+        {
+            var destinations = new List<Vector3>();
+            foreach (var stand in _stands)
+            {
+                destinations.Add(stand.ProjectedMove(pivotMeshRawPosition, Formation));
+            }
+
+            return destinations;
+        }
+
+        /// <summary>
+        /// Moves the unit through manual controller input as opposed to clicking a location on the table
+        /// </summary>
+        /// <param name="direction"></param>
+        /// <param name="isRunning"></param>
         public void ManualMove(Vector3 direction, bool isRunning)
         {
             EventManager.Publish(PrimoEvents.UserInterfaceChange, new UserInterfaceArgs(this, UserInterfaceArgs.UserInterfaceCommand.DrawUnitDestination, new List<Vector3>()));
@@ -165,6 +176,9 @@ namespace PrimoVictoria.Models
             }
         }
 
+        /// <summary>
+        /// Will halt the manual move
+        /// </summary>
         public void StopManualMove()
         {
             foreach (var stand in _stands)
@@ -190,6 +204,9 @@ namespace PrimoVictoria.Models
             }
         }
 
+        /// <summary>
+        /// Stops the wheeling action
+        /// </summary>
         public void StopWheel()
         {
             foreach (var stand in _stands)

@@ -6,6 +6,7 @@ TagManager:
   tags:
   - UnitMeshDecorator
   - ModelStand
+  - UnboundDecorator
   layers:
   - Default
   - TransparentFX
